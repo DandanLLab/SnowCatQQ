@@ -27,7 +27,7 @@
     "snowcat-image-size": "workspace:*",
     "snowcat-protobuf": "workspace:*",
     "reflect-metadata": "^0.2.2",
-    "winston": "^3.17.0",
+    "winston": "^3.19.0",
     "htmlparser2": "10.0.0"
   },
   "devDependencies": {
