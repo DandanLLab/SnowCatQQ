@@ -336,9 +336,16 @@ function textElementToText (textElement: any): string {
   return '';
 }
 
+// 历史: 同 onebot/api/msg.ts 的特定会话特殊处理, 改为可配置数组, 默认空=不跳过。
+// 如需旧行为: NAPCAT_SPECIAL_PEER_UINS='284840486,1094950020'
+const SPECIAL_PEER_UINS: string[] = (process.env['NAPCAT_SPECIAL_PEER_UINS'] ?? '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(s => /^\d+$/.test(s));
+
 function replyElementToText (replyElement: any, msg: RawMessage, recursiveLevel: number): string {
   const recordMsgOrNull = msg.records.find((record) => replyElement.sourceMsgIdInRecords === record.msgId);
-  return `[回复消息 ${recordMsgOrNull && recordMsgOrNull.peerUin !== '284840486' && recordMsgOrNull.peerUin !== '1094950020'
+  return `[回复消息 ${recordMsgOrNull && !SPECIAL_PEER_UINS.includes(recordMsgOrNull.peerUin)
     ? rawMessageToText(recordMsgOrNull, recursiveLevel + 1)
     : `未找到消息记录 (MsgId = ${replyElement.sourceMsgIdInRecords})`
     }]`;
