@@ -337,7 +337,7 @@ function textElementToText (textElement: any): string {
 }
 
 // 历史: 同 onebot/api/msg.ts 的特定会话特殊处理, 改为可配置数组, 默认空=不跳过。
-// 如需旧行为: NAPCAT_SPECIAL_PEER_UINS='284840486,1094950020'
+// 如需旧行为: NAPCAT_SPECIAL_PEER_UINS='<REDACTED>,<REDACTED>'
 const SPECIAL_PEER_UINS: string[] = (process.env['NAPCAT_SPECIAL_PEER_UINS'] ?? '')
   .split(',')
   .map(s => s.trim())

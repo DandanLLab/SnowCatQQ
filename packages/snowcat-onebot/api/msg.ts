@@ -2,7 +2,7 @@ import { FileNapCatOneBotUUID } from 'snowcat-common/src/file-uuid';
 
 // 历史: 特定会话(如文件传输助手/官方助手类号)走特殊回包与视频URL通道。
 // 改造: 从硬编码字面量改为可配置数组(环境变量优先, 默认空=不做特殊处理), 保留原分支结构。
-// 如需恢复旧行为, 配置 NAPCAT_SPECIAL_PEER_UINS='284840486,1094950020' 即可。
+// 如需恢复旧行为, 配置 NAPCAT_SPECIAL_PEER_UINS='<REDACTED>,<REDACTED>' 即可。
 const SPECIAL_PEER_UINS: string[] = (process.env['NAPCAT_SPECIAL_PEER_UINS'] ?? '')
   .split(',')
   .map(s => s.trim())
