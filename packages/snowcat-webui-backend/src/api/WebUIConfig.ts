@@ -18,6 +18,8 @@ export const GetWebUIConfigHandler: RequestHandler = async (_, res) => {
       ipWhitelist: config.ipWhitelist || [],
       ipBlacklist: config.ipBlacklist || [],
       enableXForwardedFor: config.enableXForwardedFor || false,
+      allowOrigins: config.allowOrigins || [],
+      // 安全修复：不回吐 token / totpSecret 等敏感字段
     });
   } catch (error) {
     const msg = (error as Error).message;
@@ -93,7 +95,7 @@ export const GetClientIPHandler: RequestHandler = async (req, res) => {
 // 更新WebUI基础配置
 export const UpdateWebUIConfigHandler: RequestHandler = async (req, res) => {
   try {
-    const { host, port, loginRate, disableWebUI, accessControlMode, ipWhitelist, ipBlacklist, enableXForwardedFor } = req.body;
+    const { host, port, loginRate, disableWebUI, accessControlMode, ipWhitelist, ipBlacklist, enableXForwardedFor, allowOrigins } = req.body;
 
     const updateConfig: any = {};
 
@@ -153,6 +155,13 @@ export const UpdateWebUIConfigHandler: RequestHandler = async (req, res) => {
       updateConfig.enableXForwardedFor = enableXForwardedFor;
     }
 
+    if (allowOrigins !== undefined) {
+      if (!Array.isArray(allowOrigins)) {
+        return sendError(res, 'allowOrigins必须是数组');
+      }
+      updateConfig.allowOrigins = allowOrigins;
+    }
+
     await WebUiConfig.UpdateWebUIConfig(updateConfig);
     return sendSuccess(res, null);
   } catch (error) {
@@ -161,7 +170,7 @@ export const UpdateWebUIConfigHandler: RequestHandler = async (req, res) => {
   }
 };
 
-// 获取SSL证书状态
+// 获取SSL证书状态（只返回存在性，不回吐证书与私钥内容）
 export const GetSSLStatusHandler: RequestHandler = async (_, res) => {
   try {
     const certPath = join(webUiPathWrapper.configPath, 'cert.pem');
@@ -170,22 +179,12 @@ export const GetSSLStatusHandler: RequestHandler = async (_, res) => {
     const certExists = existsSync(certPath);
     const keyExists = existsSync(keyPath);
 
-    let certContent = '';
-    let keyContent = '';
-
-    if (certExists) {
-      certContent = await fsProm.readFile(certPath, 'utf-8');
-    }
-    if (keyExists) {
-      keyContent = await fsProm.readFile(keyPath, 'utf-8');
-    }
-
+    // 安全修复：不再返回 certContent / keyContent（TLS 私钥明文不应经 API 下发）。
+    // 前端只需展示「已配置/未配置」状态；如需查看证书详情可自行在服务器上读取。
     return sendSuccess(res, {
       enabled: certExists && keyExists,
       certExists,
       keyExists,
-      certContent,
-      keyContent,
     });
   } catch (error) {
     const msg = (error as Error).message;

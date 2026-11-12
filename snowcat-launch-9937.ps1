@@ -39,5 +39,5 @@ $env:NAPCAT_INJECT_PATH = Join-Path $NapcatDir 'NapCatWinBootHook.dll'
 $env:NAPCAT_MAIN_PATH = $mainJs
 Write-Host ("[OK] qqnt=" + $app.version + " build=" + $qqnt['buildVersion'])
 $logFile = Join-Path $NapcatDir ('snowcat-boot5-' + (Get-Date -Format 'HHmmss') + '.log')
-Start-Process -FilePath (Join-Path $NapcatDir 'NapCatWinBootMain.exe') -ArgumentList ('"' + $QQPath + '"', '"' + (Join-Path $NapcatDir 'NapCatWinBootHook.dll') + '"', '-q3430961870') -WindowStyle Hidden -RedirectStandardError $logFile
+Start-Process -FilePath (Join-Path $NapcatDir 'NapCatWinBootMain.exe') -ArgumentList ('"' + $QQPath + '"', '"' + (Join-Path $NapcatDir 'NapCatWinBootHook.dll') + '"', '-q<Account>') -WindowStyle Hidden -RedirectStandardError $logFile
 Write-Host 'launched'

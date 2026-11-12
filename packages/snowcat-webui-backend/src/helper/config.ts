@@ -32,7 +32,10 @@ const WebUiConfigSchema = Type.Object({
   // IP黑名单列表
   ipBlacklist: Type.Array(Type.String(), { default: [] }),
   // 是否启用 X-Forwarded-For 获取真实IP
+  // 安全提示：该请求头可被客户端伪造，仅在部署于可信反向代理（会重写该头）之后才有意义。
   enableXForwardedFor: Type.Boolean({ default: false }),
+  // 允许跨域访问的前端源列表（精确匹配，含协议）。空列表 = 仅允许同源/本机 host 一致的 Origin。
+  allowOrigins: Type.Array(Type.String(), { default: [] }),
   // 是否启用双因素认证（2FA）
   enable2FA: Type.Boolean({ default: false }),
   // TOTP 密钥

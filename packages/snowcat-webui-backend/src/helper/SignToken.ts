@@ -1,8 +1,25 @@
 import crypto from 'crypto';
+import { scryptSync, randomBytes, timingSafeEqual } from 'crypto';
 import store from 'snowcat-common/src/store';
 import type { WebUiCredentialJson, WebUiCredentialInnerJson } from '@/snowcat-webui-backend/src/types';
+
+// 常量时间字符串比较，避免逐字节短路造成的时序侧信道
+function safeEqual (a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 export class AuthHelper {
-  private static readonly secretKey = process.env['NAPCAT_WEBUI_JWT_SECRET_KEY'] || Math.random().toString(36).slice(2);
+  // JWT/HMAC 签名密钥：优先环境变量；未配置时用 crypto 强随机生成并稳定缓存，
+  // 不再回落 Math.random()（可预测密钥=凭证可伪造）。
+  // 注意：随机密钥在进程重启后失效，所有已签发凭证随之失效，用户需重新登录。
+  private static readonly secretKey: string = (() => {
+    const envKey = process.env['NAPCAT_WEBUI_JWT_SECRET_KEY'];
+    if (envKey && envKey.length >= 16) return envKey;
+    return crypto.randomBytes(32).toString('hex');
+  })();
   private static readonly MAX_CREDENTIAL_VALID_SECONDS = 3600;
 
   public static getSecretKey (): string {
@@ -37,7 +54,7 @@ export class AuthHelper {
         .createHmac('sha256', AuthHelper.secretKey)
         .update(jsonString, 'utf8')
         .digest('hex');
-      return calculatedHmac === credentialJson.Hmac;
+      return safeEqual(calculatedHmac, credentialJson.Hmac);
     } catch (_error) {
       return false;
     }
@@ -65,7 +82,7 @@ export class AuthHelper {
     const createdTimeSeconds = Math.floor(Number(credentialJson.Data.CreatedTime));
     const timeDifferenceSeconds = currentTimeSeconds - createdTimeSeconds;
     const isWithinOneHour = timeDifferenceSeconds >= 0 && timeDifferenceSeconds <= AuthHelper.MAX_CREDENTIAL_VALID_SECONDS;
-    return isWithinOneHour && credentialJson.Data.HashEncoded === AuthHelper.generatePasswordHash(token);
+    return isWithinOneHour && safeEqual(credentialJson.Data.HashEncoded, AuthHelper.generatePasswordHash(token));
   }
 
   /**
@@ -94,21 +111,39 @@ export class AuthHelper {
   }
 
   /**
-     * 生成密码Hash
+     * 生成密码Hash（scrypt，随机盐，N=16384 r=8 p=1）。
+     * 存储格式: scrypt$<saltHex>$<hashHex>
      * @param password 密码
-     * @returns 生成的Hash值
+     * @returns 生成的Hash值（含盐与参数，可自校验）
      */
   public static generatePasswordHash (password: string): string {
-    return crypto.createHash('sha256').update(password + '.napcat').digest().toString('hex');
+    const salt = randomBytes(16);
+    const hash = scryptSync(password, salt, 32, { N: 16384, r: 8, p: 1 });
+    return `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
   }
 
   /**
-     * 对比密码和Hash值
+     * 对比密码和Hash值。
+     * 兼容两种输入：
+     *  - 新格式 scrypt$<saltHex>$<hashHex>（逐盐校验，恒定时间比较）
+     *  - 旧格式 单轮 SHA-256 hex（历史凭证，仅供校验，不用于生成）
      * @param password 密码
      * @param hash Hash值
      * @returns 布尔值，表示密码是否匹配Hash值
      */
   public static comparePasswordHash (password: string, hash: string): boolean {
-    return this.generatePasswordHash(password) === hash;
+    if (hash.startsWith('scrypt$')) {
+      const parts = hash.split('$');
+      if (parts.length !== 3) return false;
+      const salt = Buffer.from(parts[1] ?? '', 'hex');
+      const expected = Buffer.from(parts[2] ?? '', 'hex');
+      if (salt.length !== 16 || expected.length !== 32) return false;
+      const actual = scryptSync(password, salt, 32, { N: 16384, r: 8, p: 1 });
+      return timingSafeEqual(actual, expected);
+    }
+    // 兼容历史数据：旧版单轮 SHA-256(password + '.napcat')
+    // 老凭证仍可通过校验（不丢功能语义），升级后建议改密码以迁移到 scrypt。
+    const legacy = crypto.createHash('sha256').update(password + '.napcat').digest('hex');
+    return safeEqual(legacy, hash);
   }
 }

@@ -184,24 +184,9 @@ function isIPInList (ip: string, ipList: string[]): boolean {
 export const cors: RequestHandler = async (req, res, next) => {
   const config = await WebUiConfig.GetWebUIConfig();
 
-  // 根据配置决定如何获取客户端IP
-  let clientIP: string;
-  if (config.enableXForwardedFor) {
-    // 启用 X-Forwarded-For 时，优先从该头部获取真实IP
-    const forwardedFor = req.headers['x-forwarded-for'];
-    if (typeof forwardedFor === 'string') {
-      // X-Forwarded-For 可能包含多个IP，取第一个
-      clientIP = forwardedFor.split(',')[0]?.trim() || '';
-    } else if (Array.isArray(forwardedFor) && forwardedFor.length > 0) {
-      clientIP = forwardedFor[0] || '';
-    } else {
-      // 如果没有 X-Forwarded-For，回退到 socket IP
-      clientIP = req.ip || req.socket.remoteAddress || '';
-    }
-  } else {
-    // 默认使用 socket IP
-    clientIP = req.ip || req.socket.remoteAddress || '';
-  }
+  // 获取客户端IP优先走 req.ip（express 'trust proxy' 负责可信代理的解析），
+  // 不再无条件信任请求方可伪造的 X-Forwarded-For 头。
+  const clientIP: string = req.ip || req.socket.remoteAddress || '';
 
   // 检查访问控制模式
   if (config.accessControlMode === 'whitelist') {
@@ -219,11 +204,20 @@ export const cors: RequestHandler = async (req, res, next) => {
   }
   // 'none' 模式：不进行任何限制
 
-  const origin = req.headers.origin || '*';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  // CORS：不再反射任意 Origin。
+  // 未配置 allowOrigins 时，只有「无 Origin 头（同源/直连工具）」或「Origin 主机与请求 host 一致（本地多端口开发）」才放行跨域头，
+  // 其余一律不带 ACAO 头（浏览器会拒绝跨域响应）。
+  const origin = req.headers.origin;
+  const requestHost = req.headers.host || '';
+  const originHost = typeof origin === 'string' && origin.startsWith('http') ? origin.replace(/^https?:\/\//, '').split('/')[0] ?? '' : '';
+  const hostMatches = originHost !== '' && originHost === requestHost;
+  if (origin && (config.allowOrigins?.length ? config.allowOrigins.includes(origin) : hostMatches)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(204);

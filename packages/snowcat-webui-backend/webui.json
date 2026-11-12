@@ -7,5 +7,6 @@
   "accessControlMode": "none",
   "ipWhitelist": [],
   "ipBlacklist": [],
-  "enableXForwardedFor": false
+  "enableXForwardedFor": false,
+  "allowOrigins": []
 }

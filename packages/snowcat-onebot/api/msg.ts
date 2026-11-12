@@ -1,4 +1,12 @@
 import { FileNapCatOneBotUUID } from 'snowcat-common/src/file-uuid';
+
+// 历史: 特定会话(如文件传输助手/官方助手类号)走特殊回包与视频URL通道。
+// 改造: 从硬编码字面量改为可配置数组(环境变量优先, 默认空=不做特殊处理), 保留原分支结构。
+// 如需恢复旧行为, 配置 NAPCAT_SPECIAL_PEER_UINS='<REDACTED>,<REDACTED>' 即可。
+const SPECIAL_PEER_UINS: string[] = (process.env['NAPCAT_SPECIAL_PEER_UINS'] ?? '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(s => /^\d+$/.test(s));
 import { MessageUnique } from 'snowcat-common/src/message-unique';
 import {
   ChatType,
@@ -298,7 +306,7 @@ export class OneBotMsgApi {
       const records = msg.records.find(msgRecord => msgRecord.msgId === element?.sourceMsgIdInRecords);
 
       // 特定账号的特殊处理
-      if (records && (records.peerUin === '284840486' || records.peerUin === '1094950020')) {
+      if (records && (SPECIAL_PEER_UINS.includes(records.peerUin))) {
         return createReplyData(records.msgId);
       }
 
@@ -416,7 +424,7 @@ export class OneBotMsgApi {
       // 读取视频链接并兜底
       let videoUrlWrappers: Awaited<ReturnType<typeof this.core.apis.FileApi.getVideoUrl>> | undefined;
 
-      if (msg.peerUin === '284840486' || msg.peerUin === '1094950020') {
+      if (SPECIAL_PEER_UINS.includes(msg.peerUin)) {
         try {
           videoUrlWrappers = await this.core.apis.FileApi.getVideoUrl({
             chatType: msg.chatType,
@@ -1171,7 +1179,7 @@ export class OneBotMsgApi {
       resMsg.sender.nickname = member?.nick ?? member?.cardName ?? '临时会话';
       resMsg.temp_source = 0;
     } else {
-      resMsg.group_id = 284840486;
+      resMsg.group_id = SPECIAL_PEER_UINS[0] ? parseInt(SPECIAL_PEER_UINS[0]) : 0;
       resMsg.temp_source = 0;
       resMsg.sender.nickname = '临时会话';
     }

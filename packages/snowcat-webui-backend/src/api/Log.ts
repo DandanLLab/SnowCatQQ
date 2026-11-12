@@ -7,8 +7,11 @@ const isMacOS = process.platform === 'darwin';
 
 // 日志脱敏函数
 const sanitizeLog = (log: string): string => {
-  // 脱敏 token 参数，将 token=xxx 替换为 token=***
-  return log.replace(/token=[\w\d]+/gi, 'token=***');
+  // 脱敏: token=xxx / token: xxx / access_token / refresh_token / credential / Authorization 一律打码
+  return log
+    .replace(/token=[\w\d.\-]+/gi, 'token=***')
+    .replace(/token[:=]\s*"?[\w\d.\-]+/gi, 'token=***')
+    .replace(/(access_token|refresh_token|credential|Authorization)[:=]\s*"?[\w\d.\-+/=]+/gi, '$1=***');
 };
 // 日志记录
 export const LogHandler: RequestHandler = async (req, res) => {
