@@ -446,3 +446,7 @@ Ending 不是终点，是 SnowCat 的起点。
 **—— SnowCat 开发组 ——**
 
 </div>
+
+
+> [!IMPORTANT]
+> **仓库纪律**：开 issue / 提 PR 前请先读 [CHARTER.md](./CHARTER.md)。只开真 issue，凭据不入库，套娃复读会被合并，乐子请小份。开源不是开盒。
