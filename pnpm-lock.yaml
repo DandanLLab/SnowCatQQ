@@ -807,8 +807,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(sharp@0.34.5)(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))
       vite-plugin-static-copy:
-        specifier: ^2.2.0
-        version: 2.3.2(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^4.1.1
+        version: 4.1.1(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(supports-color@7.2.0)(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2))
@@ -5787,6 +5787,10 @@ packages:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
 
+  picomatch@4.0.7:
+    resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
+    engines: {node: '>=12'}
+
   pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
     engines: {node: '>=0.10.0'}
@@ -6583,6 +6587,10 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
+  tinyglobby@0.2.17:
+    resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
+    engines: {node: '>=12.0.0'}
+
   tinyrainbow@3.0.3:
     resolution: {integrity: sha512-PSkbLUoxOFRzJYjjxHJt9xro7D+iilgMX/C9lawzVuYiIdcihh9DXmVibBe8lmcFrRi/VzlPjBxbN7rH24q8/Q==}
     engines: {node: '>=14.0.0'}
@@ -6890,11 +6898,11 @@ packages:
       svgo:
         optional: true
 
-  vite-plugin-static-copy@2.3.2:
-    resolution: {integrity: sha512-iwrrf+JupY4b9stBttRWzGHzZbeMjAHBhkrn67MNACXJVjEMRpCI10Q3AkxdBkl45IHaTfw/CNVevzQhP7yTwg==}
-    engines: {node: ^18.0.0 || >=20.0.0}
+  vite-plugin-static-copy@4.1.1:
+    resolution: {integrity: sha512-GrlA8YklrAfSyxJ4M3fdQLOo9oNkp56IM9FYgX/WtEgeIFkPwhu4wzpufBCIuNKCa6Fn77FkRdYxkHqV0FwjAw==}
+    engines: {node: ^22.0.0 || >=24.0.0}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
   vite-tsconfig-paths@5.1.4:
     resolution: {integrity: sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==}
@@ -11612,6 +11620,10 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
+  fdir@6.5.0(picomatch@4.0.7):
+    optionalDependencies:
+      picomatch: 4.0.7
+
   fecha@4.2.3: {}
 
   fflate@0.8.2: {}
@@ -13173,6 +13185,8 @@ snapshots:
 
   picomatch@4.0.3: {}
 
+  picomatch@4.0.7: {}
+
   pify@2.3.0: {}
 
   pirates@4.0.7: {}
@@ -14136,6 +14150,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
 
+  tinyglobby@0.2.17:
+    dependencies:
+      fdir: 6.5.0(picomatch@4.0.7)
+      picomatch: 4.0.7
+
   tinyrainbow@3.0.3: {}
 
   to-absolute-glob@2.0.2:
@@ -14515,13 +14534,12 @@ snapshots:
     optionalDependencies:
       sharp: 0.34.5
 
-  vite-plugin-static-copy@2.3.2(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)):
+  vite-plugin-static-copy@4.1.1(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       chokidar: 3.6.0
-      fast-glob: 3.3.3
-      fs-extra: 11.3.2
       p-map: 7.0.4
       picocolors: 1.1.1
+      tinyglobby: 0.2.17
       vite: 6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-tsconfig-paths@5.1.4(supports-color@7.2.0)(typescript@5.9.3)(vite@6.4.1(@types/node@22.19.1)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.2)):
