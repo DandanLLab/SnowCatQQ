@@ -4,11 +4,11 @@
 #   ① 自动发现 QQ：注册表 → 常见路径 → D:/OneKey 便携 → 找不到给一键安装提示
 #   ② 自动读真实版本：versions/*/resources/app/package.json（废手工 qqnt.json 钉版）
 #   ③ 自动生成 qqnt.json + loadNapCat.js 到运行时目录
-# 用法: .\snowcat-launch.ps1 [-Account 3430961870] [-NapcatDir C:\dsh\.tmp\napcat-shell] [-QQPath 自定义QQ.exe]
+# 用法: .\snowcat-launch.ps1 [-Account <REDACTED>] [-NapcatDir C:\dsh\.tmp\napcat-shell] [-QQPath 自定义QQ.exe]
 # 2026-11-11 立项 · SnowCat Project
 
 param(
-  [string]$Account = '3430961870',
+  [string]$Account = '<REDACTED>',
   [string]$NapcatDir = 'C:\dsh\.tmp\napcat-shell',
   [string]$QQPath = '',
   [switch]$InstallIfMissing
