@@ -42,11 +42,11 @@ jobs:
         target:
           - name: Framework
             build_cmd: build:framework
-            src_dir: packages/napcat-framework/dist
+            src_dir: packages/snowcat-framework/dist
             dist_dir: framework-dist
           - name: Shell
             build_cmd: build:shell
-            src_dir: packages/napcat-shell/dist
+            src_dir: packages/snowcat-shell/dist
             dist_dir: shell-dist
     steps:
       - name: Clone Main Repository
@@ -77,9 +77,9 @@ jobs:
           NAPCAT_VERSION: ${{ env.NAPCAT_VERSION }}
         run: |
           pnpm i
-          pnpm --filter napcat-webui-frontend run build || exit 1
+          pnpm --filter snowcat-webui-frontend run build || exit 1
           pnpm run ${{ matrix.target.build_cmd }}
-          pnpm --filter napcat-plugin-builtin run build || exit 1
+          pnpm --filter snowcat-plugin-builtin run build || exit 1
           mv ${{ matrix.target.src_dir }} ${{ matrix.target.dist_dir }}
           cd ${{ matrix.target.dist_dir }}
           npm install --omit=dev
