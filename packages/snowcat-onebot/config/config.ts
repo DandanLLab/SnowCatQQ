@@ -88,6 +88,19 @@ const McpServerConfigSchema = Type.Object({
   debug: Type.Boolean({ default: false }),
 });
 
+// Milky 协议服务端配置（milky.ntqqrev.org v1.3，默认关闭）
+const MilkyServerConfigSchema = Type.Object({
+  name: Type.String({ default: 'milky-server' }),
+  enable: Type.Boolean({ default: false }),
+  host: Type.String({ default: '127.0.0.1' }),
+  port: Type.Number({ default: 3100 }),
+  token: Type.String({ default: '' }),
+  enableCors: Type.Boolean({ default: true }),
+  enableWebsocket: Type.Boolean({ default: false }),
+  webhooks: Type.Array(Type.String(), { default: [] }),
+  debug: Type.Boolean({ default: false }),
+});
+
 const NetworkConfigSchema = Type.Object({
   httpServers: Type.Array(HttpServerConfigSchema, { default: [] }),
   httpSseServers: Type.Array(HttpSseServerConfigSchema, { default: [] }),
@@ -95,6 +108,7 @@ const NetworkConfigSchema = Type.Object({
   websocketServers: Type.Array(WebsocketServerConfigSchema, { default: [] }),
   websocketClients: Type.Array(WebsocketClientConfigSchema, { default: [] }),
   mcpServers: Type.Optional(Type.Array(McpServerConfigSchema, { default: [] })),
+  milkyServers: Type.Optional(Type.Array(MilkyServerConfigSchema, { default: [] })),
   plugins: Type.Array(PluginConfigSchema, { default: [] }),
 }, { default: {} });
 
@@ -122,8 +136,9 @@ export type WebsocketServerConfig = Static<typeof WebsocketServerConfigSchema>;
 export type WebsocketClientConfig = Static<typeof WebsocketClientConfigSchema>;
 export type PluginConfig = Static<typeof PluginConfigSchema>;
 export type McpServerConfig = Static<typeof McpServerConfigSchema>;
+export type MilkyServerConfig = Static<typeof MilkyServerConfigSchema>;
 
-export type NetworkAdapterConfig = HttpServerConfig | HttpSseServerConfig | HttpClientConfig | WebsocketServerConfig | WebsocketClientConfig | McpServerConfig | PluginConfig;
+export type NetworkAdapterConfig = HttpServerConfig | HttpSseServerConfig | HttpClientConfig | WebsocketServerConfig | WebsocketClientConfig | McpServerConfig | MilkyServerConfig | PluginConfig;
 export type NetworkConfigKey = keyof OneBotConfig['network'];
 
 export function loadConfig (config: Partial<OneBotConfig>): OneBotConfig {

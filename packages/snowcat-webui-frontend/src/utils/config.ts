@@ -14,6 +14,7 @@ const NETWORK_KEYS = [
   'websocketServers',
   'websocketClients',
   'mcpServers',
+  'milkyServers',
 ] as const;
 
 export type NetworkKey = (typeof NETWORK_KEYS)[number];

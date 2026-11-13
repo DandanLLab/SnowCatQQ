@@ -11,6 +11,7 @@ import HTTPClientDisplayCard from '@/components/display_card/http_client';
 import HTTPServerDisplayCard from '@/components/display_card/http_server';
 import HTTPSSEServerDisplayCard from '@/components/display_card/http_sse_server';
 import McpServerDisplayCard from '@/components/display_card/mcp_server';
+import MilkyServerDisplayCard from '@/components/display_card/milky_server';
 import WebsocketClientDisplayCard from '@/components/display_card/ws_client';
 import WebsocketServerDisplayCard from '@/components/display_card/ws_server';
 import EmptyState from '@/components/empty_state';
@@ -73,6 +74,7 @@ export default function NetworkPage () {
       websocketServers = [],
       websocketClients = [],
       mcpServers = [],
+      milkyServers = [],
     } = {},
   } = config;
   const [loading, setLoading] = useState(false);
@@ -278,6 +280,26 @@ export default function NetworkPage () {
             }}
           />
         );
+      case 'milkyServers':
+        return (
+          <MilkyServerDisplayCard
+            key={item.name}
+            showType={showType}
+            data={item as OneBotConfig['network']['milkyServers'][0]}
+            onDelete={async () => {
+              await onDelete('milkyServers', item.name);
+            }}
+            onEdit={() => {
+              onEdit('milkyServers', item.name);
+            }}
+            onEnable={async () => {
+              await onEnable('milkyServers', item.name);
+            }}
+            onEnableDebug={async () => {
+              await onEnableDebug('milkyServers', item.name);
+            }}
+          />
+        );
       case 'websocketClients':
         return (
           <WebsocketClientDisplayCard
@@ -312,6 +334,7 @@ export default function NetworkPage () {
         ...websocketClients,
         ...httpSseServers,
         ...mcpServers,
+        ...milkyServers,
       ]
         .sort((a, b) => a.name.localeCompare(b.name))
         .map((item) => {
@@ -357,8 +380,20 @@ export default function NetworkPage () {
               true
             );
           }
+          if (milkyServers.find((i) => i.name === item.name)) {
+            return renderCard(
+              'milkyServers',
+              item as OneBotConfig['network']['milkyServers'][0],
+              true
+            );
+          }
           return null;
         }),
+    },
+    {
+      key: 'milkyServers',
+      title: 'Milky服务器',
+      items: milkyServers.map((item) => renderCard('milkyServers', item)),
     },
     {
       key: 'mcpServers',
@@ -414,7 +449,7 @@ export default function NetworkPage () {
         <PageHeader
           icon={<LuSignal size={20} />}
           title='网络配置'
-          description='WS / HTTP / SSE / MCP 四类接入点，一处统一管理'
+          description='WS / HTTP / SSE / MCP / Milky 接入点，一处统一管理'
           actions={
             <>
               <AddButton onOpen={handleClickCreate} />

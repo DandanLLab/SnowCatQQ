@@ -229,6 +229,34 @@ const AddButton: React.FC<AddButtonProps> = (props) => {
             </Tooltip>
           </div>
         </DropdownItem>
+        <DropdownItem
+          key='milkyServers'
+          textValue='milkyServers'
+          startContent={
+            <div className='w-6 h-6'>
+              <IoServerOutline className='w-5 h-5 text-primary-400' />
+            </div>
+          }
+        >
+          <div className='flex gap-1 items-center'>
+            Milky 服务器
+            <Tooltip
+              content='「由SnowCat建立」一个 Milky（milky.ntqqrev.org v1.3）服务器：POST /api/:api 调用 + /event 事件推送（SSE / WebSocket）+ WebHook。Lagrange 生态的 QQ 协议标准。'
+              showArrow
+              className='max-w-64'
+            >
+              <Button
+                isIconOnly
+                radius='full'
+                size='sm'
+                variant='light'
+                className='w-4 h-4 min-w-0'
+              >
+                <FaRegCircleQuestion />
+              </Button>
+            </Tooltip>
+          </div>
+        </DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
