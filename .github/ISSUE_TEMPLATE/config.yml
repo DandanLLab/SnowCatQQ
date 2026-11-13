@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 仓库纪律（CHARTER）
+    url: https://github.com/DandanLLab/SnowCatQQ/blob/main/CHARTER.md
+    about: 发帖前必读：只开真 issue，凭据不入库，套娃复读会被合并
+  - name: 通道生态公告
+    url: https://github.com/DandanLLab/SnowCatQQ/issues/52
+    about: QQ 收紧后的多通道玩法与路线图
