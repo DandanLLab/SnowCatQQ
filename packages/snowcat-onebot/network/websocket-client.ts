@@ -8,19 +8,47 @@ import { LifeCycleSubType, OB11LifeCycleEvent } from '@/snowcat-onebot/event/met
 import { WebsocketClientConfig } from '@/snowcat-onebot/config/config';
 import { IOB11NetworkAdapter } from '@/snowcat-onebot/network/adapter';
 import json5 from 'json5';
+import { OneBot12Bridge } from '@/snowcat-onebot/onebot12/bridge';
+import type { ActionMapLike } from '@/snowcat-onebot/onebot12/actions';
+import type { V11EventLike } from '@/snowcat-onebot/onebot12/events';
 
 export class OB11WebSocketClientAdapter extends IOB11NetworkAdapter<WebsocketClientConfig> {
   private connection: WebSocket | null = null;
   private heartbeatRef: NodeJS.Timeout | null = null;
   private firstConnectDelayed: boolean = false;
+  private bridgeInstance: OneBot12Bridge | null = null;
+  private bridgeConfigRef: unknown = null;
+
+  private get bridge (): OneBot12Bridge | null {
+    if (this.config.protocol === 'v11') {
+      return null;
+    }
+    if (!this.bridgeInstance || this.bridgeConfigRef !== this.config) {
+      this.bridgeInstance = new OneBot12Bridge({
+        actions: this.actions as unknown as ActionMapLike,
+        selfId: () => String(this.core.selfInfo.uin ?? ''),
+        adapterName: this.name,
+        config: this.config,
+        implName: 'snowcat',
+      });
+      this.bridgeConfigRef = this.config;
+    }
+    return this.bridgeInstance;
+  }
 
   override get isActive (): boolean {
     return this.isEnable && !!this.connection && this.connection.readyState === WebSocket.OPEN;
   }
 
   async onEvent<T extends OB11EmitEventContent> (event: T) {
+    const payload = this.bridge
+      ? this.bridge.convertEvent(event as unknown as V11EventLike)
+      : event;
+    if (!payload) {
+      return;
+    }
     if (this.connection && this.connection.readyState === WebSocket.OPEN) {
-      this.connection.send(JSON.stringify(event));
+      this.connection.send(JSON.stringify(payload));
     }
   }
 
@@ -31,7 +59,10 @@ export class OB11WebSocketClientAdapter extends IOB11NetworkAdapter<WebsocketCli
     if (this.config.heartInterval > 0) {
       this.heartbeatRef = setInterval(() => {
         if (this.connection && this.connection.readyState === WebSocket.OPEN) {
-          this.connection.send(JSON.stringify(new OB11HeartbeatEvent(this.core, this.config.heartInterval, this.core.selfInfo.online ?? true, true)));
+          const beat = this.bridge
+            ? this.bridge.buildHeartbeatEvent(this.config.heartInterval, this.core.selfInfo.online ?? true)
+            : new OB11HeartbeatEvent(this.core, this.config.heartInterval, this.core.selfInfo.online ?? true, true);
+          this.connection.send(JSON.stringify(beat));
         }
       }, this.config.heartInterval);
     }
@@ -143,6 +174,12 @@ export class OB11WebSocketClientAdapter extends IOB11NetworkAdapter<WebsocketCli
   }
 
   private async handleMessage (message: RawData) {
+    const bridge = this.bridge;
+    if (bridge) {
+      const line = await bridge.handleLine(message.toString());
+      await this.checkStateAndReply<unknown>(JSON.parse(line) as unknown);
+      return;
+    }
     let receiveData: { action: typeof ActionName[keyof typeof ActionName], params?: any, echo?: any; } = { action: ActionName.Unknown, params: {} };
     let echo;
 

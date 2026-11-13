@@ -74,6 +74,7 @@ class DebugAdapter extends IOB11NetworkAdapter<WebsocketServerConfig> {
   constructor (sessionId: string, core: SnowCatCore, obContext: NapCatOneBot11Adapter, actions: ActionMap) {
     const config: WebsocketServerConfig = {
       enable: true,
+      protocol: 'v12',
       name: `debug-${sessionId}`,
       host: '127.0.0.1',
       port: 0,

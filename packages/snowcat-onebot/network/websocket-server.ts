@@ -12,12 +12,17 @@ import { WebsocketServerConfig } from '@/snowcat-onebot/config/config';
 import { NapCatOneBot11Adapter } from '@/snowcat-onebot/index';
 import { IOB11NetworkAdapter } from '@/snowcat-onebot/network/adapter';
 import json5 from 'json5';
+import { OneBot12Bridge } from '@/snowcat-onebot/onebot12/bridge';
+import type { ActionMapLike } from '@/snowcat-onebot/onebot12/actions';
+import type { V11EventLike } from '@/snowcat-onebot/onebot12/events';
 
 export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketServerConfig> {
   wsServer?: WebSocketServer;
   wsClients: WebSocket[] = [];
   private heartbeatIntervalId: NodeJS.Timeout | null = null;
   wsClientWithEvent: WebSocket[] = [];
+  /** 选 v12 时走协议桥，v11 时保持原路径 */
+  private bridge: OneBot12Bridge | null = null;
 
   override get isActive (): boolean {
     return this.isEnable && this.wsClientWithEvent.length > 0;
@@ -27,12 +32,27 @@ export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketSer
     name: string, config: WebsocketServerConfig, core: SnowCatCore, obContext: NapCatOneBot11Adapter, actions: ActionMap
   ) {
     super(name, config, core, obContext, actions);
+    this.bridge = this.isV12 ? this.createBridge() : null;
     this.wsServer = new WebSocketServer({
       port: this.config.port,
       host: this.config.host === '0.0.0.0' ? '' : this.config.host,
       maxPayload: 50 * 1024 * 1024, // 50 MB
     });
     this.createServer(this.wsServer);
+  }
+
+  private get isV12 (): boolean {
+    return this.config.protocol !== 'v11';
+  }
+
+  private createBridge (): OneBot12Bridge {
+    return new OneBot12Bridge({
+      actions: this.actions as unknown as ActionMapLike,
+      selfId: () => String(this.core.selfInfo.uin ?? ''),
+      adapterName: this.name,
+      config: this.config,
+      implName: 'snowcat',
+    });
   }
 
   createServer (newServer: WebSocketServer) {
@@ -84,17 +104,27 @@ export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketSer
 
   connectEvent (core: SnowCatCore, wsClient: WebSocket) {
     try {
-      this.checkStateAndReply<unknown>(new OB11LifeCycleEvent(core, LifeCycleSubType.CONNECT), wsClient).catch(e => this.logger.logError('[OneBot] [WebSocket Server] 发送生命周期失败', e));
+      const handshake = this.bridge
+        ? this.bridge.buildConnectEvent()
+        : new OB11LifeCycleEvent(core, LifeCycleSubType.CONNECT);
+      this.checkStateAndReply<unknown>(handshake, wsClient).catch(e => this.logger.logError('[OneBot] [WebSocket Server] 发送生命周期失败', e));
     } catch (e) {
       this.logger.logError('[OneBot] [WebSocket Server] 发送生命周期失败', e);
     }
   }
 
   async onEvent<T extends OB11EmitEventContent> (event: T) {
+    const payload = this.bridge
+      ? this.bridge.convertEvent(event as unknown as V11EventLike)
+      : event;
+    if (!payload) {
+      // 12 里没有对应形态（如 message_sent），直接丢弃
+      return;
+    }
     const promises = this.wsClientWithEvent.map((wsClient) => {
       return new Promise<void>((resolve, reject) => {
         if (wsClient.readyState === WebSocket.OPEN) {
-          wsClient.send(JSON.stringify(event));
+          wsClient.send(JSON.stringify(payload));
           resolve();
         } else {
           reject(new Error('WebSocket is not open'));
@@ -135,7 +165,10 @@ export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketSer
     this.heartbeatIntervalId = setInterval(() => {
       this.wsClientWithEvent.forEach((wsClient) => {
         if (wsClient.readyState === WebSocket.OPEN) {
-          wsClient.send(JSON.stringify(new OB11HeartbeatEvent(this.core, this.config.heartInterval, this.core.selfInfo.online ?? true, true)));
+          const beat = this.bridge
+            ? this.bridge.buildHeartbeatEvent(this.config.heartInterval, this.core.selfInfo.online ?? true)
+            : new OB11HeartbeatEvent(this.core, this.config.heartInterval, this.core.selfInfo.online ?? true, true);
+          wsClient.send(JSON.stringify(beat));
         }
       });
     }, this.config.heartInterval);
@@ -174,6 +207,11 @@ export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketSer
   }
 
   private async handleMessage (wsClient: WebSocket, message: RawData) {
+    if (this.bridge) {
+      const line = await this.bridge.handleLine(message.toString());
+      await this.checkStateAndReply<unknown>(JSON.parse(line) as unknown, wsClient);
+      return;
+    }
     let receiveData: { action: typeof ActionName[keyof typeof ActionName], params?: any, echo?: any; } = { action: ActionName.Unknown, params: {} };
     let echo;
     try {
@@ -202,10 +240,14 @@ export class OB11WebSocketServerAdapter extends IOB11NetworkAdapter<WebsocketSer
 
   async reload (newConfig: WebsocketServerConfig) {
     const wasEnabled = this.isEnable;
+    const protocolChanged = newConfig.protocol !== this.config.protocol;
     const oldPort = this.config.port;
     const oldHost = this.config.host;
     const oldHeartbeatInterval = this.config.heartInterval;
     this.config = newConfig;
+    if (protocolChanged) {
+      this.bridge = this.isV12 ? this.createBridge() : null;
+    }
 
     if (newConfig.enable && !wasEnabled) {
       this.open();

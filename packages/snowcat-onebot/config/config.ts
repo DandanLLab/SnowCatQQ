@@ -2,9 +2,12 @@ import { Type, Static } from '@sinclair/typebox';
 import { TypeCompiler } from '@sinclair/typebox/compiler';
 import { Value } from '@sinclair/typebox/value';
 export type MessageFormat = 'array' | 'string';
+/** OneBot 协议版本。v11 已弃用，仅保留兼容期，新接入请用 v12 */
+export type OneBotProtocol = 'v11' | 'v12';
 
 const HttpServerConfigSchema = Type.Object({
   name: Type.String({ default: 'http-server' }),
+  protocol: Type.String({ default: 'v12', description: 'OneBot 协议版本：v12（默认）或 v11（已弃用）' }),
   enable: Type.Boolean({ default: false }),
   port: Type.Number({ default: 3000 }),
   host: Type.String({ default: '127.0.0.1' }),
@@ -17,6 +20,7 @@ const HttpServerConfigSchema = Type.Object({
 
 const HttpSseServerConfigSchema = Type.Object({
   name: Type.String({ default: 'http-sse-server' }),
+  protocol: Type.String({ default: 'v12', description: 'OneBot 协议版本：v12（默认）或 v11（已弃用）' }),
   enable: Type.Boolean({ default: false }),
   port: Type.Number({ default: 3000 }),
   host: Type.String({ default: '127.0.0.1' }),
@@ -30,6 +34,7 @@ const HttpSseServerConfigSchema = Type.Object({
 
 const HttpClientConfigSchema = Type.Object({
   name: Type.String({ default: 'http-client' }),
+  protocol: Type.String({ default: 'v12', description: 'OneBot 协议版本：v12（默认）或 v11（已弃用）' }),
   enable: Type.Boolean({ default: false }),
   url: Type.String({ default: 'http://localhost:8080' }),
   messagePostFormat: Type.String({ default: 'array' }),
@@ -40,6 +45,7 @@ const HttpClientConfigSchema = Type.Object({
 
 const WebsocketServerConfigSchema = Type.Object({
   name: Type.String({ default: 'websocket-server' }),
+  protocol: Type.String({ default: 'v12', description: 'OneBot 协议版本：v12（默认）或 v11（已弃用）' }),
   enable: Type.Boolean({ default: false }),
   host: Type.String({ default: '127.0.0.1' }),
   port: Type.Number({ default: 3001 }),
@@ -53,6 +59,7 @@ const WebsocketServerConfigSchema = Type.Object({
 
 const WebsocketClientConfigSchema = Type.Object({
   name: Type.String({ default: 'websocket-client' }),
+  protocol: Type.String({ default: 'v12', description: 'OneBot 协议版本：v12（默认）或 v11（已弃用）' }),
   enable: Type.Boolean({ default: false }),
   url: Type.String({ default: 'ws://localhost:8082' }),
   messagePostFormat: Type.String({ default: 'array' }),
