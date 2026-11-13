@@ -12,14 +12,32 @@
       "snowcat-core": [
         "../../packages/snowcat-core/index.ts"
       ],
+      "snowcat-core/*": [
+        "../../packages/snowcat-core/*"
+      ],
       "snowcat-onebot": [
         "../../packages/snowcat-onebot/index.ts"
+      ],
+      "snowcat-onebot/*": [
+        "../../packages/snowcat-onebot/*"
+      ],
+      "snowcat-common": [
+        "../../packages/snowcat-common/src/index.ts"
       ],
       "snowcat-common/src/*": [
         "../../packages/snowcat-common/src/*"
       ],
       "snowcat-image-size/src/*": [
         "../../packages/snowcat-image-size/src/*"
+      ],
+      "snowcat-webui-backend": [
+        "../../packages/snowcat-webui-backend/index.ts"
+      ],
+      "snowcat-webui-backend/*": [
+        "../../packages/snowcat-webui-backend/*"
+      ],
+      "snowcat-pty": [
+        "../../packages/snowcat-pty/node-pty.d.ts"
       ],
       "@/snowcat-core/*": [
         "../../packages/snowcat-core/*"
