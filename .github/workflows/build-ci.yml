@@ -34,7 +34,7 @@ jobs:
         run: pnpm test
 
   build:
-    name: Build NapCat.${{ matrix.target.name }}
+    name: Build SnowCat.${{ matrix.target.name }}
     needs: typecheck-and-test
     runs-on: ubuntu-latest
     strategy:
@@ -71,12 +71,13 @@ jobs:
           echo "NAPCAT_VERSION=${VERSION}" >> $GITHUB_ENV
           echo "Latest tag: ${LATEST_TAG}"
           echo "Build version: ${VERSION}"
-      - name: Build NapCat.${{ matrix.target.name }}
+      - name: Build SnowCat.${{ matrix.target.name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NAPCAT_VERSION: ${{ env.NAPCAT_VERSION }}
         run: |
           pnpm i
+          pnpm --filter snowcat-types run build || exit 1
           pnpm --filter snowcat-webui-frontend run build || exit 1
           pnpm run ${{ matrix.target.build_cmd }}
           pnpm --filter snowcat-plugin-builtin run build || exit 1
@@ -87,5 +88,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v6
         with:
-          name: NapCat.${{ matrix.target.name }}
+          name: SnowCat.${{ matrix.target.name }}
           path: ${{ matrix.target.dist_dir }}
