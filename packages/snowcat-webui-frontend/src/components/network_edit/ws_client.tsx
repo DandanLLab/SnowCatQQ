@@ -22,6 +22,7 @@ const WebsocketClientForm: React.FC<WebsocketClientFormProps> = ({
     url: 'ws://localhost:8082',
     reportSelfMessage: false,
     messagePostFormat: 'array',
+    protocol: 'v12',
     token: random_token(16),
     debug: false,
     heartInterval: 30000,
@@ -106,6 +107,25 @@ const WebsocketClientForm: React.FC<WebsocketClientFormProps> = ({
       type: 'switch',
       description: '是否验证SSL证书（wss连接）。关闭后可连接自签名证书的服务器，但会降低安全性',
       colSpan: 2,
+    },
+    {
+      name: 'protocol',
+      label: 'OneBot 协议版本',
+      type: 'select',
+      description: '新接入请用 v12；v11 仅保留兼容期',
+      isRequired: true,
+      options: [
+        { key: 'v12', value: 'v12（默认）' },
+        { key: 'v11', value: 'v11（已弃用）' },
+      ],
+      colSpan: 1,
+      warnOn: [
+        {
+          value: 'v11',
+          message:
+            'OneBot V11 已弃用，仅保留兼容期支持，后续版本会移除。\n\n确认切换到 V11 吗？',
+        },
+      ],
     },
   ];
 

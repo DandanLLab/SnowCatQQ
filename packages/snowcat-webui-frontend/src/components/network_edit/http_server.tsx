@@ -22,6 +22,7 @@ const HTTPServerForm: React.FC<HTTPServerFormProps> = ({
     enableCors: true,
     enableWebsocket: false,
     messagePostFormat: 'array',
+    protocol: 'v12',
     token: random_token(16),
     debug: false,
   };
@@ -93,6 +94,25 @@ const HTTPServerForm: React.FC<HTTPServerFormProps> = ({
       label: 'Token',
       type: 'input',
       placeholder: '请输入Token',
+    },
+    {
+      name: 'protocol',
+      label: 'OneBot 协议版本',
+      type: 'select',
+      description: '新接入请用 v12；v11 仅保留兼容期',
+      isRequired: true,
+      options: [
+        { key: 'v12', value: 'v12（默认）' },
+        { key: 'v11', value: 'v11（已弃用）' },
+      ],
+      colSpan: 1,
+      warnOn: [
+        {
+          value: 'v11',
+          message:
+            'OneBot V11 已弃用，仅保留兼容期支持，后续版本会移除。\n\n确认切换到 V11 吗？',
+        },
+      ],
     },
   ];
 

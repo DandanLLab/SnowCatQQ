@@ -13,6 +13,9 @@ import { URL } from 'url';
 import { ActionName } from '@/snowcat-onebot/action/router';
 import { OB11HeartbeatEvent } from '@/snowcat-onebot/event/meta/OB11HeartbeatEvent';
 import { OB11LifeCycleEvent, LifeCycleSubType } from '@/snowcat-onebot/event/meta/OB11LifeCycleEvent';
+import { OneBot12Bridge } from '@/snowcat-onebot/onebot12/bridge';
+import type { ActionMapLike } from '@/snowcat-onebot/onebot12/actions';
+import type { V11EventLike } from '@/snowcat-onebot/onebot12/events';
 
 export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig> {
   private app: Express | undefined;
@@ -21,6 +24,26 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
   private wsClients: WebSocket[] = [];
   private heartbeatIntervalId: NodeJS.Timeout | null = null;
   private wsClientWithEvent: WebSocket[] = [];
+  private bridgeInstance: OneBot12Bridge | null = null;
+  private bridgeConfigRef: unknown = null;
+
+  /** 选 v12 走协议桥，v11 保持原路径；配置被替换后自动重建 */
+  private get bridge (): OneBot12Bridge | null {
+    if (this.config.protocol === 'v11') {
+      return null;
+    }
+    if (!this.bridgeInstance || this.bridgeConfigRef !== this.config) {
+      this.bridgeInstance = new OneBot12Bridge({
+        actions: this.actions as unknown as ActionMapLike,
+        selfId: () => String(this.core.selfInfo.uin ?? ''),
+        adapterName: this.name,
+        config: this.config,
+        implName: 'snowcat',
+      });
+      this.bridgeConfigRef = this.config;
+    }
+    return this.bridgeInstance;
+  }
 
   override get isActive (): boolean {
     return this.isEnable && this.wsClientWithEvent.length > 0;
@@ -28,10 +51,16 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
 
   override async onEvent<T extends OB11EmitEventContent> (event: T) {
     // http server is passive, no need to emit event
+    const payload = this.bridge
+      ? this.bridge.convertEvent(event as unknown as V11EventLike)
+      : event;
+    if (!payload) {
+      return;
+    }
     const promises = this.wsClientWithEvent.map((wsClient) => {
       return new Promise<void>((resolve, reject) => {
         if (wsClient.readyState === WebSocket.OPEN) {
-          wsClient.send(JSON.stringify(event));
+          wsClient.send(JSON.stringify(payload));
           resolve();
         } else {
           reject(new Error('WebSocket is not open'));
@@ -173,7 +202,10 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
 
   connectEvent (core: any, wsClient: WebSocket) {
     try {
-      this.checkStateAndReply<unknown>(new OB11LifeCycleEvent(core, LifeCycleSubType.CONNECT), wsClient).catch(e => this.logger.logError('[OneBot] [HTTP WebSocket] 发送生命周期失败', e));
+      const handshake = this.bridge
+        ? this.bridge.buildConnectEvent()
+        : new OB11LifeCycleEvent(core, LifeCycleSubType.CONNECT);
+      this.checkStateAndReply<unknown>(handshake, wsClient).catch(e => this.logger.logError('[OneBot] [HTTP WebSocket] 发送生命周期失败', e));
     } catch (e) {
       this.logger.logError('[OneBot] [HTTP WebSocket] 发送生命周期失败', e);
     }
@@ -184,7 +216,10 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
     this.heartbeatIntervalId = setInterval(() => {
       this.wsClientWithEvent.forEach((wsClient) => {
         if (wsClient.readyState === WebSocket.OPEN) {
-          wsClient.send(JSON.stringify(new OB11HeartbeatEvent(this.core, 30000, this.core.selfInfo.online ?? true, true)));
+          const beat = this.bridge
+            ? this.bridge.buildHeartbeatEvent(30000, this.core.selfInfo.online ?? true)
+            : new OB11HeartbeatEvent(this.core, 30000, this.core.selfInfo.online ?? true, true);
+          wsClient.send(JSON.stringify(beat));
         }
       });
     }, 30000);
@@ -223,6 +258,12 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
   }
 
   private async handleWSMessage (wsClient: WebSocket, message: RawData) {
+    const bridge = this.bridge;
+    if (bridge) {
+      const line = await bridge.handleLine(message.toString());
+      await this.checkStateAndReply<unknown>(JSON.parse(line) as unknown, wsClient);
+      return;
+    }
     let receiveData: { action: typeof ActionName[keyof typeof ActionName], params?: any, echo?: any; } = { action: ActionName.Unknown, params: {} };
     let echo;
     try {
@@ -263,6 +304,16 @@ export class OB11HttpServerAdapter extends IOB11NetworkAdapter<HttpServerConfig>
     const actionName = req.path.split('/')[1];
     const payload_echo = payload['echo'];
     const real_echo = payload_echo ?? Math.random().toString(36).substring(2, 15);
+
+    const bridge = this.bridge;
+    if (bridge) {
+      const line = await bridge.handleLine(JSON.stringify({
+        action: actionName,
+        params: payload,
+        echo: String(real_echo),
+      }));
+      return res.json(JSON.parse(line) as unknown);
+    }
 
     const action = this.actions.get(actionName as any);
     if (action) {

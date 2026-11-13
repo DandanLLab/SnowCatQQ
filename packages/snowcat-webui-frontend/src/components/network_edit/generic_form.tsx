@@ -28,6 +28,8 @@ export interface Field<T extends keyof OneBotConfig['network']> {
   isDisabled?: boolean;
   description?: string;
   colSpan?: 1 | 2;
+  /** 选中指定值时先弹确认，取消则不改变当前值 */
+  warnOn?: Array<{ value: string; message: string; }>;
 }
 
 export interface GenericFormProps<T extends keyof NetworkConfigType> {
@@ -72,6 +74,21 @@ const GenericForm = <T extends keyof NetworkConfigType> ({
           Path<NetworkConfig[T][0]>
         >;
         setValue(key, value);
+      }
+      // 老后端 / 老配置文件可能没有 protocol 字段，这里补默认值，
+      // 免得协议版本下拉框是空的、用户以为没得选
+      const hasProtocolField = fields.some((f) => f.name === 'protocol');
+      if (
+        hasProtocolField &&
+        (data as Record<string, unknown>)['protocol'] === undefined
+      ) {
+        setValue(
+          'protocol' as Path<NetworkConfig[T][0]>,
+          'v12' as unknown as PathValue<
+            NetworkConfig[T][0],
+            Path<NetworkConfig[T][0]>
+          >
+        );
       }
     } else {
       reset();
@@ -126,6 +143,19 @@ const GenericForm = <T extends keyof NetworkConfigType> ({
                           placeholder={field.placeholder}
                           selectedKeys={[controllerField.value as string]}
                           value={controllerField.value.toString()}
+                          onSelectionChange={(key) => {
+                            const next = key === null ? '' : String(key);
+                            const warning = field.warnOn?.find(
+                              (item) => item.value === next
+                            );
+                            if (
+                              warning &&
+                              !window.confirm(warning.message)
+                            ) {
+                              return;
+                            }
+                            controllerField.onChange(next);
+                          }}
                           classNames={{
                             trigger: 'bg-white/80 dark:bg-white/[0.06] backdrop-blur-md border border-black/[0.08] dark:border-white/12 hover:bg-white/95 dark:hover:bg-white/[0.09] transition-all shadow-sm data-[hover=true]:border-primary/35',
                             value: 'text-default-700 dark:text-default-100',

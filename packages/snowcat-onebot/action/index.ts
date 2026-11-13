@@ -105,7 +105,10 @@ import { GetAiCharacters } from '@/snowcat-onebot/action/extends/GetAiCharacters
 import { GetGuildList } from './guild/GetGuildList';
 import { GetGuildProfile } from './guild/GetGuildProfile';
 import { GetClientkey } from './extends/GetClientkey';
-import { SendPacket } from './extends/SendPacket';
+// 已停用 send_packet：它允许调用方直接构造并发送底层 packet，
+// 等于把 QQ 协议栈的写权限交给任何拿到 token 的接入方，滥用成本过低。
+// 恢复前请先自行审计调用方与鉴权边界。
+// import { SendPacket } from './extends/SendPacket';
 import { FriendPoke, GroupPoke, SendPoke } from '@/snowcat-onebot/action/packet/SendPoke';
 import { SetDiyOnlineStatus } from './extends/SetDiyOnlineStatus';
 import { BotExit } from './extends/BotExit';
@@ -361,7 +364,7 @@ export function getAllHandlers (obContext: NapCatOneBot11Adapter, core: SnowCatC
     new GetAiRecord(obContext, core),
     new SendGroupAiRecord(obContext, core),
     new GetAiCharacters(obContext, core),
-    new SendPacket(obContext, core),
+    // new SendPacket(obContext, core), // 停用，理由见文件头部 import 处注释
     new SendPoke(obContext, core),
     new GetGroupSystemMsg(obContext, core),
     new BotExit(obContext, core),
