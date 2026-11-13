@@ -1,16 +1,11 @@
 import { OneBotAction, OneBotRequestToolkit } from '../OneBotAction';
 import { NetworkAdapterConfig } from '@/snowcat-onebot/config/config';
-export type StreamPacketBasic = {
-  type: StreamStatus;
-  data_type?: string;
-};
-export type StreamPacket<T> = T & StreamPacketBasic;
-export enum StreamStatus {
-  Stream = 'stream', // 分片流数据包
-  Response = 'response', // 流最终响应
-  Reset = 'reset', // 重置流
-  Error = 'error', // 流错误
-}
+import type { StreamPacket } from './types';
+
+// 类型与枚举本体在 ./types（从本文件上移，切断 OneBotAction ↔ StreamBasic 循环）
+export { StreamStatus, StreamPacketBasic } from './types';
+export type { StreamPacket } from './types';
+
 export abstract class BasicStream<T, R> extends OneBotAction<T, StreamPacket<R>> {
   abstract override _handle (_payload: T, _adaptername: string, _config: NetworkAdapterConfig, req: OneBotRequestToolkit): Promise<StreamPacket<R>>;
 }
