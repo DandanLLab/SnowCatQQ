@@ -1,50 +1,56 @@
-name: 馃挕 鍔熻兘寤鸿
-description: 鎻愪氦鏂板姛鑳芥垨鏀硅繘寤鸿锛堣娓呭満鏅笌鏀剁泭浼氳浼樺厛鑰冭檻锛?title: "[FEAT] "
+name: 💡 功能建议
+description: 提交新功能或改进建议（说清场景与收益会被优先考虑）
+title: "[FEAT] "
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        ## 闆尗鍔熻兘寤鸿
-        鎻愪氦鍓嶈锛?        * 鎼滅储鐜版湁 issues锛岀‘璁や笉閲嶅
-        * 璇存竻 **浣跨敤鍦烘櫙** 鑰屼笉鍙槸銆屾垜鎯宠銆嶁€斺€斿満鏅喅瀹氫紭鍏堢骇
-        * 骞冲彴鐩稿叧璇锋爣娉紙Windows / macOS / Linux / Docker锛?  - type: textarea
+        ## 雪猫功能建议
+        提交前请：
+        * 搜索现有 issues，确认不重复
+        * 说清 **使用场景** 而不只是「我想要」——场景决定优先级
+        * 平台相关请标注（Windows / macOS / Linux / Docker）
+  - type: textarea
     id: scenario
     attributes:
-      label: 浣跨敤鍦烘櫙
-      description: 浣犲湪鍋氫粈涔堛€佸崱鍦ㄥ摢銆佽繖涓姛鑳芥€庝箞甯埌浣?    validations:
+      label: 使用场景
+      description: 你在做什么、卡在哪、这个功能怎么帮到你
+    validations:
       required: true
   - type: dropdown
     id: platform
     attributes:
-      label: 鐩爣骞冲彴/瀹㈡埛绔?      description: 鍙閫夛紱娌℃湁鍒楀嚭鐨勫鎴风閫夈€屽叾浠栥€嶅苟鍦ㄥ満鏅噷鍐欐槑鍚嶅瓧
+      label: 目标平台/客户端
+      description: 可多选；没有列出的客户端选「其他」并在场景里写明名字
       multiple: true
       options:
         - "Windows"
         - "macOS"
         - "Linux"
-        - "Docker/瀹瑰櫒"
+        - "Docker/容器"
         - "QQNT (Windows/macOS/Linux)"
-        - "Lagrange 绯诲崗璁"
-        - "NapCat 绯?
+        - "Lagrange 系协议端"
+        - "NapCat 系"
         - "Telegram"
-        - "椋炰功"
-        - "閽夐拤"
+        - "飞书"
+        - "钉钉"
         - "Discord"
         - "Matrix"
-        - "鍏朵粬锛堣嚜瀹氫箟锛岃鍦ㄥ満鏅腑鍐欐槑锛?
+        - "其他（自定义，请在场景中写明）"
     validations:
       required: true
   - type: textarea
     id: expect
     attributes:
-      label: 鏈熸湜鏁堟灉
-      description: 鐞嗘兂涓殑琛屼负鎻忚堪
+      label: 期望效果
+      description: 理想中的行为描述
     validations:
       required: true
   - type: checkboxes
     id: charter
     attributes:
-      label: 绾緥纭
+      label: 纪律确认
       options:
-        - label: 鎴戝凡闃呰 CHARTER.md锛岀‘璁ゆ湰甯栦笉鍚嚟鎹€佷笉鍚箍鍛娿€佷笉鏄濞冨璇?          required: true
+        - label: 我已阅读 CHARTER.md，确认本帖不含凭据、不含广告、不是套娃复读
+          required: true
