@@ -54,6 +54,7 @@ import { IOB11NetworkAdapter } from '@/snowcat-onebot/network/adapter';
 import { OB11HttpSSEServerAdapter } from './network/http-server-sse';
 import { OB11McpServerAdapter } from './network/mcp-server';
 import { OB11PluginMangerAdapter } from './network/plugin-manger';
+import { MilkyServerAdapter } from './milky/network/http';
 
 import { proxiedListenerOf } from '@/snowcat-core/helper/proxy-handler';
 import { OneBotFileApi } from './api/file';
@@ -118,6 +119,9 @@ export class NapCatOneBot11Adapter {
     }
     for (const key of ob11Config.network.mcpServers ?? []) {
       log += `MCP服务: ${key.host}:${key.port}/mcp, : ${key.enable ? '已启动' : '未启动'}\n`;
+    }
+    for (const key of ob11Config.network.milkyServers ?? []) {
+      log += `Milky服务: ${key.host}:${key.port}, : ${key.enable ? '已启动' : '未启动'}\n`;
     }
     return log;
   }
@@ -221,6 +225,13 @@ export class NapCatOneBot11Adapter {
         );
       }
     }
+    for (const key of ob11Config.network.milkyServers ?? []) {
+      if (key.enable) {
+        this.networkManager.registerAdapter(
+          new MilkyServerAdapter(key.name, key, this.core, this, this.actions)
+        );
+      }
+    }
     await this.networkManager.openAllAdapters();
 
     this.initMsgListener();
@@ -253,6 +264,7 @@ export class NapCatOneBot11Adapter {
     await this.handleConfigChange(prev.network.websocketServers, now.network.websocketServers, OB11WebSocketServerAdapter);
     await this.handleConfigChange(prev.network.websocketClients, now.network.websocketClients, OB11WebSocketClientAdapter);
     await this.handleConfigChange(prev.network.mcpServers ?? [], now.network.mcpServers ?? [], OB11McpServerAdapter);
+    await this.handleConfigChange(prev.network.milkyServers ?? [], now.network.milkyServers ?? [], MilkyServerAdapter);
   }
 
   private async handleConfigChange<CT extends NetworkAdapterConfig> (
