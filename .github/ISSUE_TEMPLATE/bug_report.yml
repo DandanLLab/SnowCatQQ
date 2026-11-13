@@ -9,33 +9,72 @@ body:
         ## 雪猫 Bug 反馈
         提交前请：
         * 搜索现有 issues，确认不重复
-        * **凭据红线**：任何 QQ 号、密码、token、私钥不得出现在本帖（示例一律 <REDACTED>）
+        * **凭据红线**：任何 QQ 号、密码、token、私钥不得出现在本帖（示例一律 `<REDACTED>`）
         * 带对照实验的报法最受欢迎（参考 #73：现象/排除清单/定位结论）
-        * Boot 失败请附 snowcat-boot.log（无日志也请注明"未生成"，这是线索）
+        * Boot 失败请附 `snowcat-boot.log`（无日志也请注明「未生成」，这是线索）
+  - type: dropdown
+    id: client-type
+    attributes:
+      label: 客户端/平台类型
+      description: 可多选；没有列出的客户端选「其他」并在现象里写明名字
+      multiple: true
+      options:
+        - "Windows"
+        - "macOS"
+        - "Linux"
+        - "Docker/容器"
+        - "QQNT 客户端（Windows/macOS/Linux）"
+        - "Lagrange 系协议端"
+        - "NapCat 系"
+        - "Telegram"
+        - "飞书"
+        - "钉钉"
+        - "Discord"
+        - "Matrix"
+        - "其他（自定义，请在现象中写明客户端名称）"
+    validations:
+      required: true
   - type: input
     id: system-version
-    attributes: { label: 系统版本, placeholder: "Windows 11 25H2 build 26200" }
-    validations: { required: true }
+    attributes:
+      label: 系统版本
+      description: 运行环境的系统版本
+      placeholder: "Windows 11 25H2 build 26200"
+    validations:
+      required: true
   - type: input
     id: qq-version
-    attributes: { label: QQ 版本, placeholder: "9.9.37-54395" }
-    validations: { required: true }
+    attributes:
+      label: QQ/客户端版本
+      description: QQNT 版本号或其他客户端的版本号
+      placeholder: "9.9.37-54395"
+    validations:
+      required: true
   - type: input
     id: snowcat-version
-    attributes: { label: 雪Cat 版本/分支, placeholder: "main @ 日期 或 release 号" }
-    validations: { required: true }
+    attributes:
+      label: 雪猫 版本/分支
+      description: main 分支日期或 release 号
+      placeholder: "main @ 2026-11-13"
+    validations:
+      required: true
   - type: textarea
     id: what-happened
     attributes:
       label: 现象
-      description: 发生了什么、期望是什么、如何复现
-    validations: { required: true }
+      description: 发生了什么、期望是什么、如何复现（选了「其他」客户端请在此写明名称）
+    validations:
+      required: true
   - type: textarea
     id: logs
-    attributes: { label: 日志/截图, description: "snowcat-boot.log / nc-boot.log / Crashpad 状态" }
+    attributes:
+      label: 日志/截图
+      description: snowcat-boot.log / nc-boot.log / Crashpad 状态
   - type: textarea
     id: ruled-out
-    attributes: { label: 已排除项, description: "你做过哪些对照实验排除了哪些假设" }
+    attributes:
+      label: 已排除项
+      description: 你做过哪些对照实验排除了哪些假设
   - type: checkboxes
     id: charter
     attributes:
