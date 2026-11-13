@@ -17,18 +17,30 @@ import {
 } from './plugin/types';
 import { PluginRouterRegistryImpl } from './plugin/router-registry';
 
-export { PluginPackageJson } from './plugin/types';
-export { PluginConfigItem } from './plugin/types';
-export { PluginConfigUIController } from './plugin/types';
+// 以下全部是纯类型（types.ts 里只有 type/interface/enum 声明，无运行时值）：
+// 纯 ESM 下 `export { Type } from` 会当值导入并报 named export 不存在
+// （打包器容忍、tsx/vitest 炸的同款坑），统一改 export type 重导出。
+export type {
+  PluginPackageJson,
+  PluginConfigItem,
+  PluginConfigSchema,
+  PluginConfigUIController,
+  PluginLogger,
+  SnowCatPluginContext,
+  PluginModule,
+  PluginStatusConfig,
+  PluginRouterRegistry,
+  PluginRequestHandler,
+  PluginApiRouteDefinition,
+  PluginPageDefinition,
+  HttpMethod,
+  PluginHttpRequest,
+  PluginHttpResponse,
+  PluginNextFunction,
+  MemoryStaticFile,
+  MemoryFileGenerator,
+} from './plugin/types';
 export { SnowCatConfig } from './plugin/config';
-export { PluginConfigSchema } from './plugin/types';
-export { PluginLogger } from './plugin/types';
-export { SnowCatPluginContext } from './plugin/types';
-export { PluginModule } from './plugin/types';
-export { PluginStatusConfig } from './plugin/types';
-export { PluginRouterRegistry, PluginRequestHandler, PluginApiRouteDefinition, PluginPageDefinition, HttpMethod } from './plugin/types';
-export { PluginHttpRequest, PluginHttpResponse, PluginNextFunction } from './plugin/types';
-export { MemoryStaticFile, MemoryFileGenerator } from './plugin/types';
 export { PluginRouterRegistryImpl } from './plugin/router-registry';
 export class OB11PluginMangerAdapter extends IOB11NetworkAdapter<PluginConfig> implements IPluginManager {
   private readonly pluginPath: string;
