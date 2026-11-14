@@ -8,7 +8,7 @@ SnowCat 是一个由社区开发者维护的第三方 QQ 客户端：让开发�
 ## 核心特性
 
 - **QQ 9.9.37-54395 全功能在役**：通过 V8 编译器通道注入（详见[制作文档](docs/dev/FROM-P1-TO-V8.md)），QQ 本体一字节未动
-- **OneBot v11 全动作**：正向/反向 WS、HTTP、HTTP SSE 全接入方式
+- **OneBot v12 全动作（默认协议）**：正向/反向 WS、HTTP、HTTP SSE 全接入方式；v11 兼容期 + Milky 1.3 兼容层
 - **MCP 接入**：Streamable HTTP `/mcp`，全部 OneBot 动作自动暴露为 MCP 工具
 - **56 项独门动作移植**（采自 SnowLuma）：QZone 全家桶、群相册、精华、打卡、装扮、闪照管理、收藏、点赞……
 - **Packet 发包**：offset 表驱动，逐版本维护
