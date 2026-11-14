@@ -1,20 +1,33 @@
 ﻿# SnowCat 雪猫 · 稳定线启动器（PowerShell）
 #
 # 零硬改设计（对照 start-tongling.ps1 的三处硬改，全部自动化）：
-#   ① 自动发现 QQ：注册表 → 常见路径 → D:/OneKey 便携 → 找不到给一键安装提示
+#   ① 自动发现 QQ：注册表 → 常见路径 → OneKey 便携（多盘符探测）→ 找不到给一键安装提示
 #   ② 自动读真实版本：versions/*/resources/app/package.json（废手工 qqnt.json 钉版）
 #   ③ 自动生成 qqnt.json + loadNapCat.js 到运行时目录
-# 用法: .\snowcat-launch.ps1 [-Account <REDACTED>] [-NapcatDir C:\dsh\.tmp\napcat-shell] [-QQPath 自定义QQ.exe]
+# 用法: .\snowcat-launch.ps1 -Account <QQ号> [-NapcatDir <NapCat运行目录>] [-QQPath 自定义QQ.exe]
 # 2026-11-11 立项 · SnowCat Project
 
 param(
-  [string]$Account = '<REDACTED>',
-  [string]$NapcatDir = 'C:\dsh\.tmp\napcat-shell',
+  [string]$Account = '',
+  [string]$NapcatDir = "$env:USERPROFILE\.snowcat\napcat-shell",
   [string]$QQPath = '',
   [switch]$InstallIfMissing
 )
 
 $ErrorActionPreference = 'Stop'
+
+# ─────────────── ⓪ Account 缺参校验 ───────────────
+# 占位符不是可用默认值：历史版本这里留过脱敏占位符并被原样拼进 -q 参数（#45 指出）。
+# 现在默认空串，缺参直接终止并给明确提示，不再拿占位符跑。
+if ([string]::IsNullOrWhiteSpace($Account)) {
+  Write-Host '[X] 缺少 -Account 参数。用法示例: .\snowcat-launch.ps1 -Account 10000' -ForegroundColor Red
+  Write-Host '    （QQ 号不会写入任何配置文件，仅用于本次启动）' -ForegroundColor Gray
+  exit 1
+}
+if ($Account -notmatch '^\d{5,11}$') {
+  Write-Host "[X] -Account 参数不是合法 QQ 号（5-11 位数字）: $Account" -ForegroundColor Red
+  exit 1
+}
 
 # ─────────────── ① QQ 自动发现 ───────────────
 
@@ -44,8 +57,12 @@ function Find-QQInstall {
     if (Test-Path $p) { return @{ Path = $p; Source = 'common-path' } }
   }
 
-  # 3) OneKey 便携包
-  $onekey = Get-ChildItem 'D:\NapCat.Shell.Windows.OneKey\*\QQ.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+  # 3) OneKey 便携包（常见盘符逐个探，不再写死个人机器盘）
+  $onekey = $null
+  foreach ($drive in @('D:', 'C:', 'E:')) {
+    $onekey = Get-ChildItem "${drive}\NapCat.Shell.Windows.OneKey\*\QQ.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($onekey) { break }
+  }
   if ($onekey) { return @{ Path = $onekey.FullName; Source = 'onekey-portable' } }
 
   return $null
@@ -114,6 +131,11 @@ $qqnt = [ordered]@{
   isByteCodeShell = $true
   platform = 'win32'
   eleArch = 'x64'
+}
+# 运行时目录不存在就建（默认 $env:USERPROFILE\.snowcat\napcat-shell 首跑时不存在）
+if (-not (Test-Path $NapcatDir)) {
+  New-Item $NapcatDir -ItemType Directory -Force | Out-Null
+  Write-Host "[✓] 运行时目录已创建: $NapcatDir" -ForegroundColor DarkGray
 }
 $qqntPath = Join-Path $NapcatDir 'qqnt.json'
 [IO.File]::WriteAllText($qqntPath, ($qqnt | ConvertTo-Json -Depth 4), (New-Object System.Text.UTF8Encoding($false)))
