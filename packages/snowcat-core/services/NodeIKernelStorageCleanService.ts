@@ -6,22 +6,23 @@ export interface NodeIKernelStorageCleanService {
   addKernelStorageCleanListener (listener: NodeIKernelStorageCleanListener): number;
 
   removeKernelStorageCleanListener (listenerId: number): void;
+  // 内核侧实测调用样例（路径为 <QQ数据目录> 下的相对段，实际值由运行时探测，随机器与账号不同）：
   // [
   // "hotUpdate",
   // [
-  //   "C:\\Users\\nanaeo\\AppData\\Roaming\\QQ\\packages"
+  //   "<QQ数据目录>\\packages"
   // ]
   // ],
   // [
   // "tmp",
   // [
-  //   "C:\\Users\\nanaeo\\AppData\\Roaming\\QQ\\tmp"
+  //   "<QQ数据目录>\\tmp"
   // ]
   // ],
   // [
   // "SilentCacheappSessionPartation9212",
   // [
-  //   "C:\\Users\\nanaeo\\AppData\\Roaming\\QQ\\Partitions\\qqnt_9212"
+  //   "<QQ数据目录>\\Partitions\\qqnt_9212"
   // ]
   // ]
   addCacheScanedPaths (paths: Map<'tmp' | 'SilentCacheappSessionPartation9212' | 'hotUpdate', unknown>): unknown;

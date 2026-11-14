@@ -161,7 +161,7 @@ export interface NodeIKernelMsgService {
     msgList: RawMessage[];
   }>;
 
-  // getMsgService/getMsgs { chatType: 2, peerUid: '975206796', privilegeFlag: 336068800 } 0 20 true
+  // getMsgService/getMsgs { chatType: 2, peerUid: '10001', privilegeFlag: 336068800 } 0 20 true
   getMsgs (peer: Peer & { privilegeFlag: number; }, msgId: string, count: number, queryOrder: boolean): Promise<GeneralCallResult & {
     msgList: RawMessage[];
   }>;
