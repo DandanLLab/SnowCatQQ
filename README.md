@@ -13,7 +13,7 @@
 [![QQ](https://img.shields.io/badge/QQ-9.9.37--54395-12B7F5?logo=tencentqq&logoColor=white)](https://im.qq.com)
 [![OneBot](https://img.shields.io/badge/OneBot-v11-black)](https://onebot.dev)
 [![MCP](https://img.shields.io/badge/MCP-Streamable_HTTP-8A2BE2)](https://modelcontextprotocol.io)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/License-NapCat_Limited_Redistribution-orange)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/DandanLLab/SnowCatQQ?color=orange)](https://github.com/DandanLLab/SnowCatQQ/releases)
 [![Stars](https://img.shields.io/github/stars/DandanLLab/SnowCatQQ?style=social)](https://github.com/DandanLLab/SnowCatQQ/stargazers)
 
@@ -176,6 +176,26 @@ QQ 9.9.37-54395 x64（官方原版，一字节未动）
          └─ Packet ─────── napi2native + MoeHoo（offset 表驱动）
 ```
 
+
+---
+
+## 🔐 授权说明
+
+> **License：NapCat Limited Redistribution License（详见 [LICENSE](./LICENSE)）**
+
+本仓库授权分两部分，边界如下：
+
+**上游移植部分（NapCat 底座，跟随上游授权）**
+- `packages/` 下的核心代码以 NapCat 4.18.28 底座移植而来，沿用上游的 NapCat Limited Redistribution License 原文（见 [LICENSE](./LICENSE)），版权归上游作者（Copyright © 2024 Mlikiowa）所有。
+- 该授权允许在保留完整许可文本与出处声明的前提下分发；修改与扩展仅限分发目的，修改后的代码不得公开发布；非商业用途。
+- 移植文件在代码内保留上游署名（如 `packages/snowcat-core` 中的 Mlikiowa 版权标注），未抹除任何出处。
+
+**SnowCat 自研部分**
+- 雪猫在底座之上新增的适配层、通道层与工具链（如 `snowcat-onebot` 的 OneBot 适配与 MCP 适配器、`snowcat-webui-*` 控制台、`release-tools/` 全部脚本与文档），为 SnowCat 开发组自研，供社区学习与使用。
+- 自研部分不改变仓库整体的授权基调：整仓分发时随附上游 LICENSE 原文；对本仓库自研部分的后续修改，同样请保留出处与许可文本。
+- 若需超出上述许可的使用方式（含商业用途），请按 LICENSE 第 4 条向上游作者取得明确许可。
+
+一句话：**上游的归上游，版权照付；自研的归自研，白盒可查。两个部分都摊在阳光下，欢迎查验。**
 
 ---
 
