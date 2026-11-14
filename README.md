@@ -471,3 +471,13 @@ Ending 不是终点，是 SnowCat 的起点。
 
 > [!IMPORTANT]
 > **仓库纪律**：开 issue / 提 PR 前请先读 [CHARTER.md](./CHARTER.md)。只开真 issue，凭据不入库，套娃复读会被合并，乐子请小份。开源不是开盒。
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=dandanllab%2Fsnowcatqq&type=date&logscale=&releases=&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=dandanllab/snowcatqq&type=date&theme=dark&logscale&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=dandanllab/snowcatqq&type=date&logscale&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=dandanllab/snowcatqq&type=date&logscale&legend=bottom-right" />
+ </picture>
+</a>
