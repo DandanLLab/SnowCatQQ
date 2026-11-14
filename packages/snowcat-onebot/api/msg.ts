@@ -918,7 +918,8 @@ export class OneBotMsgApi {
       //         peer = data?.Peer;
       //     }
       // }
-      const jsonData = ForwardMsgBuilder.fromResId(data.id);
+      // [FIX-FWD-UUID] 优先用登记的真实 uuid；非本框架发送的 resId 维持 randomUUID 兜底
+      const jsonData = ForwardMsgBuilder.fromResId(data.id, ForwardMsgBuilder.lookupForwardUuid(data.id.toString()));
       return this.ob11ToRawConverters.json({
         data: { data: JSON.stringify(jsonData) },
         type: OB11MessageDataType.json,
@@ -1669,3 +1670,4 @@ export class OneBotMsgApi {
     return undefined;
   }
 }
+
