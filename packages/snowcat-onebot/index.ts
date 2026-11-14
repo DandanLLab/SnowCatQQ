@@ -126,46 +126,18 @@ export class NapCatOneBot11Adapter {
     return log;
   }
 
-  async InitOneBot () {
-    const selfInfo = this.core.selfInfo;
+  /**
+   * 第一段：网络层装配（壳层无关）。
+   *
+   * 只负责 OneBot 网络面的启动：AdapterManager 注册（插件管理器可选）、
+   * 全部网络适配器按配置注册并打开、WebUI 配置变更回调挂钩。
+   * 不触任何 QQ 登录态：任何壳 / 无壳（standalone）都能独立调用这一段。
+   *
+   * 对应壳层可插拔方案书第五节的拆分目标：「网络层初始化」从
+   * QQ 登录成功回调链里剥离出来，登录不登录都能开协议通道。
+   */
+  async InitOneBotNetwork (): Promise<void> {
     const ob11Config = this.configLoader.configData;
-    this.core.apis.UserApi.getUserDetailInfo(selfInfo.uid, false)
-      .then(async (user) => {
-        selfInfo.nick = user.nick;
-        this.context.logger.setLogSelfInfo(selfInfo);
-
-        // 检查是否有待发送的token
-        if (pendingTokenToSend) {
-          this.context.logger.log('[SnowCat] [OneBot] 🔐 检测到待发送的WebUI Token，开始发送');
-          try {
-            await this.core.apis.MsgApi.sendMsg(
-              { chatType: ChatType.KCHATTYPEC2C, peerUid: selfInfo.uid, guildId: '' },
-              [{
-                elementType: ElementType.TEXT,
-                elementId: '',
-                textElement: {
-                  content:
-                    '[SnowCat] 温馨提示:\n' +
-                    'WebUI密码为默认密码，已进行强制修改\n' +
-                    '新密码: ' + pendingTokenToSend,
-                  atType: NTMsgAtType.ATTYPEUNKNOWN,
-                  atUid: '',
-                  atTinyId: '',
-                  atNtUid: '',
-                },
-              }],
-              5000
-            );
-            this.context.logger.log('[SnowCat] [OneBot] ✅ WebUI Token 消息发送成功');
-          } catch (error) {
-            this.context.logger.logError('[SnowCat] [OneBot] ❌ WebUI Token 消息发送失败:', error);
-          }
-        }
-
-        WebUiDataRuntime.getQQLoginCallback()(true);
-      })
-      .catch(e => this.context.logger.logError(e));
-
     const serviceInfo = await this.creatOneBotLog(ob11Config);
     this.context.logger.log(`[Notice] [OneBot11] ${serviceInfo}`);
 
@@ -234,22 +206,148 @@ export class NapCatOneBot11Adapter {
     }
     await this.networkManager.openAllAdapters();
 
-    this.initMsgListener();
-    this.initBuddyListener();
-    this.initGroupListener();
-
-    WebUiDataRuntime.setQQVersion(this.core.context.basicInfoWrapper.getFullQQVersion());
-    WebUiDataRuntime.setQQLoginInfo(selfInfo);
-    WebUiDataRuntime.setQQLoginStatus(true);
     WebUiDataRuntime.setOnOB11ConfigChanged(async (newConfig) => {
       const prev = this.configLoader.configData;
       this.configLoader.save(newConfig);
       // this.context.logger.log(`OneBot11 配置更改：${JSON.stringify(prev)} -> ${JSON.stringify(newConfig)}`);
       await this.reloadNetwork(prev, newConfig);
     });
+  }
+
+  /**
+   * 第二段：登录态消费（壳层相关，需要 QQ 登录）。
+   *
+   * 只负责登录成功后的一次性收尾：拉昵称刷新日志身份、
+   * WebUI 强改 token 走私信通知、QQ 版本与登录信息写入 WebUI 运行时、
+   * 群反应表情解析注册。
+   * 无登录态（standalone）时不要调用这一段。
+   */
+  async InitOneBotProfile (): Promise<void> {
+    const selfInfo = this.core.selfInfo;
+    // getUserDetailInfo 属于 QQ API 域，必须等登录态就绪后才有意义；
+    // 失败只记日志不中断（昵称拉不到不影响网络层服务）。
+    this.core.apis.UserApi.getUserDetailInfo(selfInfo.uid, false)
+      .then(async (user) => {
+        selfInfo.nick = user.nick;
+        this.context.logger.setLogSelfInfo(selfInfo);
+
+        // 检查是否有待发送的token
+        if (pendingTokenToSend) {
+          this.context.logger.log('[SnowCat] [OneBot] 🔐 检测到待发送的WebUI Token，开始发送');
+          try {
+            await this.core.apis.MsgApi.sendMsg(
+              { chatType: ChatType.KCHATTYPEC2C, peerUid: selfInfo.uid, guildId: '' },
+              [{
+                elementType: ElementType.TEXT,
+                elementId: '',
+                textElement: {
+                  content:
+                    '[SnowCat] 温馨提示:\n' +
+                    'WebUI密码为默认密码，已进行强制修改\n' +
+                    '新密码: ' + pendingTokenToSend,
+                  atType: NTMsgAtType.ATTYPEUNKNOWN,
+                  atUid: '',
+                  atTinyId: '',
+                  atNtUid: '',
+                },
+              }],
+              5000
+            );
+            this.context.logger.log('[SnowCat] [OneBot] ✅ WebUI Token 消息发送成功');
+          } catch (error) {
+            this.context.logger.logError('[SnowCat] [OneBot] ❌ WebUI Token 消息发送失败:', error);
+          }
+        }
+
+        WebUiDataRuntime.getQQLoginCallback()(true);
+      })
+      .catch(e => this.context.logger.logError(e));
+
+    WebUiDataRuntime.setQQVersion(this.getQQVersionSafe());
+    WebUiDataRuntime.setQQLoginInfo(selfInfo);
+    WebUiDataRuntime.setQQLoginStatus(true);
     this.apis.GroupApi.registerParseGroupReactEventByCore().catch(e =>
       this.context.logger.logError('注册群消息反应表情失败', e)
     );
+  }
+
+  /**
+   * basicInfoWrapper 容错读取：无登录态 / 无 QQ 安装目录的环境
+   * （standalone、测试 mock、未来非 QQ 壳）拿不到 QQ 版本时不炸，
+   * 返回安全默认值并记一条警告日志。
+   */
+  private getQQVersionSafe (): string {
+    try {
+      return this.core.context.basicInfoWrapper.getFullQQVersion();
+    } catch (e) {
+      this.context.logger.logWarn(
+        '[SnowCat] [OneBot] basicInfoWrapper 不可用（无 QQ 登录态或 QQ 安装目录），QQ 版本回退默认值:',
+        e
+      );
+      return 'standalone-unknown';
+    }
+  }
+
+  /**
+   * 第三段：内核监听器装配（需要内核 session，登录后内核服务可用）。
+   *
+   * 注册三个内核 listener（消息 / 好友 / 群），把 NT 内核事件翻译成
+   * OneBot 事件喂进网络层。依赖 core.context.session 的内核服务，
+   * 无内核（standalone）时不要调用这一段。
+   */
+  async InitOneBotListeners (): Promise<void> {
+    this.initMsgListener();
+    this.initBuddyListener();
+    this.initGroupListener();
+  }
+
+  /**
+   * 事件注入入口：任何壳 / 任何数据源都可以把一条 RawMessage 喂进事件流。
+   *
+   * 走的是与内核 onRecvMsg 完全相同的处理管线（去重分配消息 ID、
+   * 双轨处理：消息转化 + 群/私聊事件解析），内核真号与外部注入源
+   * 在这条管线里行为一致。
+   *
+   * 用途：
+   *   - standalone mock 数据源：测试与独立模式喂数据；
+   *   - 未来真号壳：内核回调直接改走 injectRawMessage，装配面收敛到这一个口；
+   *   - 自定义数据源（回放、桥接其他协议端）。
+   */
+  async injectRawMessage (message: RawMessage | RawMessage[]): Promise<void> {
+    const messages = Array.isArray(message) ? message : [message];
+    for (const m of messages) {
+      if (!this.networkManager.hasActiveAdapters()) {
+        return;
+      }
+      if (this.bootTime > parseInt(m.msgTime)) {
+        this.context.logger.logDebug(`消息时间${m.msgTime}早于启动时间${this.bootTime}，忽略上报`);
+        continue;
+      }
+      m.id = MessageUnique.createUniqueMsgId(
+        {
+          chatType: m.chatType,
+          peerUid: m.peerUid,
+          guildId: '',
+        },
+        m.msgId
+      );
+      await this.emitMsg(m).catch((e) =>
+        this.context.logger.logError('处理消息失败', e)
+      );
+    }
+  }
+
+  /**
+   * 兼容聚合入口：按 Network → Profile → Listeners 的顺序依次调用三段。
+   *
+   * QQ 壳登录成功回调链（AdapterManager → InitOneBot）行为零变化：
+   * 拆分只是把原来一个函数里的三大块按职责分了层，聚合入口的
+   * 调用序与原实现完全一致。
+   */
+  async InitOneBot (): Promise<void> {
+    await this.InitOneBotNetwork();
+    await this.InitOneBotProfile();
+    await this.InitOneBotListeners();
   }
 
   private async reloadNetwork (prev: OneBotConfig, now: OneBotConfig): Promise<void> {
