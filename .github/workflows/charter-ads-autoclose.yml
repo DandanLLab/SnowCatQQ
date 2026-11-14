@@ -1,0 +1,45 @@
+name: Charter Ads Auto-Close
+
+# 章程（CHARTER.md 发言规则第 3 条）：广告、互关拉票、「关注XX谢谢喵」直接删，不发警告。
+# 本 workflow 是该条的执行器：命中即关闭（not_planned）并留一句说明，误判可重开申诉。
+# 规则集中在下方环境变量，改一行就能调。
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  autoclose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 按章程判定并关闭广告
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+          # 标题命中任意一条即关（含自我标注的 [Ad]）
+          TITLE_PAT: '(关注.{0,24}谢谢喵|互关|互赞|拉票|涨粉|引流|接推广|[[:space:]]*\[Ad\])'
+          # 正文需同时命中硬模式与（谢谢喵|[Ad]）才关，降低误杀
+          BODY_PAT: '(关注.{0,24}谢谢喵|互关|互赞|拉票|涨粉|引流|接推广)'
+          BODY_SOFT_PAT: '(谢谢喵|\[Ad\])'
+        run: |
+          hit=""
+          if printf '%s' "$ISSUE_TITLE" | grep -qiE "$TITLE_PAT"; then
+            hit="标题命中章程第 3 条（广告与拉人）"
+          elif printf '%s' "$ISSUE_BODY" | grep -qiE "$BODY_PAT" && printf '%s' "$ISSUE_BODY" | grep -qiE "$BODY_SOFT_PAT"; then
+            hit="正文命中章程第 3 条（广告与拉人）"
+          fi
+          if [ -z "$hit" ]; then
+            echo "非广告，放行：#$ISSUE_NUMBER"
+            exit 0
+          fi
+          gh api "repos/$REPO/issues/$ISSUE_NUMBER" -X PATCH \
+            -f state=closed -f state_reason=not_planned > /dev/null
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+            --body "已按 [CHARTER.md](https://github.com/$REPO/blob/main/CHARTER.md) 发言规则第 3 条关闭：**$hit**。广告与拉人帖直接处理，不发警告。如为误判，请用 [SEC] 或 [DISC] 标签重开申诉，维护者会复核。"
+          echo "已关闭 #$ISSUE_NUMBER：$hit"
