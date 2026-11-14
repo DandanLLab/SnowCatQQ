@@ -100,8 +100,29 @@ export class ForwardMsgBuilder {
     };
   }
 
-  static fromResId (resId: string): ForwardMsgJson {
-    return this.build(resId, []);
+  // [FIX-FWD-UUID] resId → uuid 登记：转发卡片 JSON 的 uniseq/filename 必须与上传时登记的 uuid
+  //   一致，客户端才能点开「查看转发记录」；randomUUID 兜底会造成摘要可见、点开为空。
+  private static readonly resIdUuidCache = new Map<string, string>();
+
+  static rememberForwardUuid (resId: string, uuid: string): void {
+    try {
+      const m = this.resIdUuidCache;
+      if (m.size >= 1000) {
+        const oldest = m.keys().next();
+        if (!oldest.done) m.delete(oldest.value);
+      }
+      m.set(resId, uuid);
+    } catch {
+      // 缓存失败不影响主流程
+    }
+  }
+
+  static lookupForwardUuid (resId: string): string | undefined {
+    return this.resIdUuidCache.get(resId);
+  }
+
+  static fromResId (resId: string, uuid?: string): ForwardMsgJson {
+    return this.build(resId, [], undefined, undefined, undefined, undefined, uuid);
   }
 
   static fromPacketMsg (resId: string, packetMsg: PacketMsg[], source?: string, news?: ForwardMsgJsonMetaDetail['news'], summary?: string, prompt?: string, uuid?: string): ForwardMsgJson {
@@ -120,3 +141,4 @@ export class ForwardMsgBuilder {
     );
   }
 }
+

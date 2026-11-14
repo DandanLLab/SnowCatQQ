@@ -169,7 +169,8 @@ export class SendMsgBase extends OneBotAction<SendMsgPayload, ReturnDataType> {
     const nodeMessages = messages.filter(isNode);
     if (nodeMessages.length > 0) {
       const packetMode = this.core.apis.PacketApi.packetStatus;
-      let returnMsgAndResId: { message: RawMessage | null, res_id?: string; } | null;
+      // [FIX-FWD-UUID] 补 uuid：uploadForwardedNodesPacket 返回值里 res_id/uuid 本来就是成对的
+      let returnMsgAndResId: { message: RawMessage | null, res_id?: string; uuid?: string; } | null;
       try {
         returnMsgAndResId = packetMode
           ? await this.handleForwardedNodesPacket(peer, nodeMessages, payload.source, payload.news, payload.summary, payload.prompt)
@@ -179,6 +180,10 @@ export class SendMsgBase extends OneBotAction<SendMsgPayload, ReturnDataType> {
       }
       if (!returnMsgAndResId) {
         throw Error('发送合并转发消息失败：returnMsgAndResId 为空！');
+      }
+      // [FIX-FWD-UUID] 登记本次上传的 resId → uuid 配对，供 forward 段重建卡片时使用
+      if (returnMsgAndResId.res_id && returnMsgAndResId.uuid) {
+        ForwardMsgBuilder.rememberForwardUuid(returnMsgAndResId.res_id, returnMsgAndResId.uuid);
       }
       if (returnMsgAndResId.message) {
         const msgShortId = MessageUnique.createUniqueMsgId({
@@ -337,6 +342,7 @@ export class SendMsgBase extends OneBotAction<SendMsgPayload, ReturnDataType> {
     });
     const resid = await this.core.apis.PacketApi.pkt.operation.UploadForwardMsgV2(uploadMsgData, msgPeer.chatType === ChatType.KCHATTYPEGROUP ? +msgPeer.peerUid : 0);
     const uuid = crypto.randomUUID();
+    ForwardMsgBuilder.rememberForwardUuid(resid, uuid); // [FIX-FWD-UUID] 覆盖嵌套上传的登记
     const forwardJson = ForwardMsgBuilder.fromPacketMsg(resid, packetMsg, source, news, summary, prompt, uuid);
     return {
       deleteAfterSentFiles: delFiles,
@@ -515,3 +521,4 @@ export default class SendMsg extends SendMsgBase {
   override payloadExample = MsgActionsExamples.SendMsg.payload;
   override returnExample = MsgActionsExamples.SendMsg.response;
 }
+
