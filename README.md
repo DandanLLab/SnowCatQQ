@@ -11,7 +11,7 @@
 **上游在，我们跟；上游没了，我们扛。**
 
 [![QQ](https://img.shields.io/badge/QQ-9.9.37--54395-12B7F5?logo=tencentqq&logoColor=white)](https://im.qq.com)
-[![OneBot](https://img.shields.io/badge/OneBot-v11-black)](https://onebot.dev)
+[![OneBot](https://img.shields.io/badge/OneBot-v12_(默认)·v11_(兼容)·Milky_1.3-black)](https://onebot.dev)
 [![MCP](https://img.shields.io/badge/MCP-Streamable_HTTP-8A2BE2)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-NapCat_Limited_Redistribution-orange)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/DandanLLab/SnowCatQQ?color=orange)](https://github.com/DandanLLab/SnowCatQQ/releases)
@@ -30,7 +30,8 @@ NapCat 4.18.28 底座 × SnowLuma 独门能力融合，**全功能运行于 QQ 9
 | | 特性 | 说明 |
 |---|---|---|
 | 🔌 | **QQ 9.9.37 全功能在役** | V8 编译器通道注入，官方最新版原生运行，QQ 本体零改动 |
-| 🤖 | **OneBot v11 全动作** | 正向 / 反向 WS、HTTP、HTTP SSE 全接入方式 |
+| 🤖 | **OneBot v12 全动作（默认协议）** | 正向 / 反向 WS、HTTP、HTTP SSE 全接入方式；v11 进入兼容期（[onebot12/](packages/snowcat-onebot/onebot12/)） |
+| 🌌 | **Milky 1.3 兼容层** | Lagrange 生态对外标准（[milky/](packages/snowcat-onebot/milky/)） |
 | 🧩 | **MCP 接入** | Streamable HTTP `/mcp`，全部动作自动暴露为 MCP 工具 |
 | 🎁 | **56 项独门动作** | 采自 SnowLuma：QZone 全家桶、群相册、精华、打卡、装扮、闪照、收藏…… |
 | 📦 | **Packet 发包** | offset 表驱动，逐版本维护 |
@@ -54,7 +55,7 @@ NapCat 4.18.28 底座 × SnowLuma 独门能力融合，**全功能运行于 QQ 9
 | **定位** | 面向大众的 IM 工具 | 开发者的智能体接入底座 |
 | **能接入谁** | 只能官方生态 | 你自己养的智能体、自己写的接入、自己定的形态 |
 | **人格形态** | 统一标准，千人一面 | 一人千面，长出什么算什么 |
-| **自动化** | 受限，接口不开放 | OneBot v11 全动作 + MCP，动作全暴露 |
+| **自动化** | 受限，接口不开放 | OneBot v12 全动作 + Milky + MCP，动作全暴露 |
 | **可查性** | 闭源，只能「相信」 | 全量开源，每一行可查，白盒立身 |
 | **运行位置** | 桌面/手机，给人用 | QQ 主进程内，给你的智能体用 |
 | **适合谁** | 日常聊天、办公协同 | 个人开发者、陪伴型智能体、自有生态实验 |
@@ -106,11 +107,11 @@ SnowCat 不是孤岛。我们生态里已经跑通一整套「dsh（DeepSeek Har
 
 | 插件 | 作用 | 仓库 |
 |---|---|---|
-| 📡 **dsh-channel-qq** | QQ 群聊/私聊通道插件，基于 OneBot v11（正是接 SnowCat 的那根线）。内置 Life Engine：可塑型记忆、内心独白、睡眠巩固、KB 检索 | [DandanLLab/dsh-channel-qq](https://github.com/DandanLLab/dsh-channel-qq) |
+| 📡 **dsh-channel-qq** | QQ 群聊/私聊通道插件，基于 OneBot v11/v12（正是接 SnowCat 的那根线）。内置 Life Engine：可塑型记忆、内心独白、睡眠巩固、KB 检索 | [DandanLLab/dsh-channel-qq](https://github.com/DandanLLab/dsh-channel-qq) |
 | 👥 **dsh-plugin-team-group** | 团队群聊：角色卡（各挂预设/人格/模型）+ 群组 + 导演发言规划器 + 逐角色执行引擎 + 跨房会议 + 邀请审批流 | [DandanLLab/dsh-plugin-team-group](https://github.com/DandanLLab/dsh-plugin-team-group) |
 | 🧠 **dsh-life-engine** | 让 agent 拥有可塑型记忆、内心独白、睡眠巩固、好奇心引擎、情感连续性——智能体「活着」的那部分 | [DandanLLab/dsh-life-engine](https://github.com/DandanLLab/dsh-life-engine) |
 
-**接法一句话**：`SnowCat（客户端层）→ OneBot v11 / MCP（协议层）→ dsh-channel-qq（通道层）→ dsh 大沙盒（智能体层）→ 各插件（人格/群组/生活层）`。
+**接法一句话**：`SnowCat（客户端层）→ OneBot v12（默认）/ v11（兼容）/ Milky / MCP（协议层）→ dsh-channel-qq（通道层）→ dsh 大沙盒（智能体层）→ 各插件（人格/群组/生活层）`。
 
 > 官方机器人太偏向工作流了。而这条链上每一环，都是为「你自己养智能体」而造。
 
@@ -149,7 +150,7 @@ SnowCat 不是孤岛。我们生态里已经跑通一整套「dsh（DeepSeek Har
 SnowCatQQ
 ├── 📦 packages/              ⭐ 26 包底层全源码（TS）
 │   ├── snowcat-core/           NT 内核 API + listener + Packet 发包
-│   ├── snowcat-onebot/         OneBot v11 全动作 + MCP 适配器 + 稳定线
+│   ├── snowcat-onebot/         OneBot v12 全动作（v11 兼容期）+ Milky 1.3 + MCP 适配器 + 稳定线
 │   ├── snowcat-webui-frontend/ 雪猫控制台（React + HeroUI）
 │   ├── snowcat-webui-backend/  WebUI 服务端
 │   ├── snowcat-shell/          单文件 bundle 出口（napcat.mjs）
@@ -171,7 +172,7 @@ SnowCatQQ
 QQ 9.9.37-54395 x64（官方原版，一字节未动）
  └─ winmm.dll（V8 通道代理：MinHook 挂 v8::ScriptCompiler）
      └─ QQ 主进程内：napcat.mjs（3.25MB 单文件 bundle）
-         ├─ OneBot v11 ── 反向 WS / HTTP / MCP (/mcp)
+         ├─ OneBot v12（默认，v11 兼容）/ Milky 1.3 ── 反向 WS / HTTP / MCP (/mcp)
          ├─ WebUI ──────── React + HeroUI（:6099）
          └─ Packet ─────── napi2native + MoeHoo（offset 表驱动）
 ```
